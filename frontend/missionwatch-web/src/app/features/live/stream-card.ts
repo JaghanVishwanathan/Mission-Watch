@@ -26,14 +26,36 @@ const STATE_ICON: Record<string, string> = {
           <span class="platform">{{ platform() }}</span>
         </div>
         <ng-content select="[cardActions]" />
-        <span class="state" [class]="'state state--' + s.state.toLowerCase()" role="status">
+        <span
+          class="state"
+          [class]="'state state--' + s.state.toLowerCase()"
+          role="status"
+          [attr.title]="s.detail"
+        >
           @if (s.state === 'LIVE') {
             <span class="dot" aria-hidden="true"></span>
           } @else {
             <mw-icon [name]="icon()" [size]="13" />
           }
           {{ label() }}
+          @if (s.detail && s.state !== 'UNAVAILABLE') {
+            <span class="visually-hidden">: {{ s.detail }}</span>
+          }
         </span>
+        @if (externalUrl()) {
+          <a
+            class="ext"
+            [href]="externalUrl()"
+            target="_blank"
+            rel="noopener noreferrer"
+            [attr.title]="externalLabel()"
+            [attr.aria-label]="
+              externalLabel() + ': ' + broadcaster() + ' (opens ' + platform() + ' in a new tab)'
+            "
+          >
+            <mw-icon name="external" [size]="15" />
+          </a>
+        }
       </header>
 
       <div class="frame" [class.frame--auto]="!fixedRatio()" [class.frame--fill]="fill()">
@@ -41,52 +63,36 @@ const STATE_ICON: Record<string, string> = {
           <div class="fallback">
             <mw-icon name="x-circle" [size]="28" />
             <p>{{ s.detail ?? 'This stream cannot be played here.' }}</p>
+            @if (externalUrl()) {
+              <a class="btn" [href]="externalUrl()" target="_blank" rel="noopener noreferrer"
+                >{{ externalLabel() }} <mw-icon name="external" [size]="14"
+              /></a>
+            }
           </div>
         } @else {
           <ng-content />
         }
       </div>
-
-      <footer class="foot">
-        <p class="detail">{{ s.state === 'UNAVAILABLE' ? '' : s.detail }}</p>
-        @if (externalUrl()) {
-          <a
-            class="btn btn--ghost ext"
-            [href]="externalUrl()"
-            target="_blank"
-            rel="noopener noreferrer"
-            [attr.aria-label]="externalLabel() + ' (opens ' + platform() + ' in a new tab)'"
-          >
-            {{ externalLabel() }} <mw-icon name="external" [size]="14" />
-          </a>
-        }
-      </footer>
     </article>
   `,
   styles: `
     .card {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto minmax(0, 1fr);
       height: 100%;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       background: var(--bg-elevated);
       min-width: 0;
-    }
-    .head,
-    .foot {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-3);
-      padding: var(--space-3) var(--space-4);
+      overflow: hidden;
     }
     .head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      height: 44px;
+      padding: 0 var(--space-2) 0 var(--space-4);
       border-bottom: 1px solid var(--border);
-    }
-    .foot {
-      border-top: 1px solid var(--border);
-      min-height: 56px;
     }
     .who {
       flex: 1 1 auto;
@@ -144,9 +150,16 @@ const STATE_ICON: Record<string, string> = {
       background: #000;
       overflow: hidden;
     }
-    /* Main tile: at least 16:9, and grows to the height of the tiles beside it. */
-    .frame--fill {
-      height: 100%;
+    /*
+     * Main tile in the wide focus layout: fill the height set by the two stacked side tiles.
+     * aspect-ratio must be off here; with a set height it would derive the width and overflow.
+     * Below 1101px (live.scss stacks the tiles) it keeps 16:9.
+     */
+    @media (min-width: 1101px) {
+      .frame--fill {
+        aspect-ratio: auto;
+        height: 100%;
+      }
     }
     .frame--auto {
       aspect-ratio: auto;
@@ -173,15 +186,23 @@ const STATE_ICON: Record<string, string> = {
       position: static;
       min-height: 220px;
     }
-    .detail {
-      font-size: var(--fs-xs);
-      color: var(--text-muted);
-      min-width: 0;
-    }
     .ext {
+      display: inline-grid;
+      place-items: center;
       flex-shrink: 0;
-      height: 36px;
-      padding: 0 var(--space-3);
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+    }
+    .ext:hover {
+      color: var(--text);
+      background: var(--accent-soft);
+    }
+    @media (max-width: 480px) {
+      .platform {
+        display: none;
+      }
     }
   `,
 })

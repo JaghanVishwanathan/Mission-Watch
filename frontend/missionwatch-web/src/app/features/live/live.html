@@ -39,7 +39,7 @@
     <div class="t0" [attr.aria-busy]="launch.isLoading() && !l()">
       @if (t0(); as target) {
         @if (exactT0()) {
-          <mw-countdown [target]="target" [display]="true" />
+          <mw-countdown class="clock" [target]="target" />
         }
         <p class="t0-when">
           Target T-0

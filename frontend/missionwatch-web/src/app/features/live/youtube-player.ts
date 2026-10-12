@@ -123,8 +123,24 @@ export class YoutubePlayer {
     if (this.failed) return;
     const data = p.getVideoData?.();
     const start = this.scheduledStart();
-    if (data?.isLive) {
-      this.status.emit({ state: 'LIVE', detail: 'YouTube reports this broadcast as live.' });
+    const PS = this.yt?.PlayerState;
+    const state = p.getPlayerState();
+    // YouTube also flags upcoming waiting rooms ("Live in 5 hours") with isLive, so LIVE needs
+    // the stream to have actually started: a waiting room can never play, buffer or pause.
+    const started = !!PS && (state === PS.PLAYING || state === PS.BUFFERING || state === PS.PAUSED);
+    if (data?.isLive && started) {
+      this.status.emit({
+        state: 'LIVE',
+        detail: 'YouTube reports this broadcast as live and playing.',
+      });
+    } else if (data?.isLive && start && Date.parse(start) > Date.now()) {
+      this.status.emit({ state: 'SCHEDULED', detail: 'The broadcast has not started yet.' });
+    } else if (data?.isLive) {
+      // Could be a waiting room or a live stream whose autoplay the browser blocked.
+      this.status.emit({
+        state: 'UNKNOWN',
+        detail: 'Live or upcoming broadcast that has not started playing. Press play to check.',
+      });
     } else if (p.getPlayerState() === this.yt?.PlayerState.ENDED) {
       this.status.emit({ state: 'OFFLINE', detail: 'The broadcast has ended.' });
     } else if (start && Date.parse(start) > Date.now()) {

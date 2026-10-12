@@ -31,7 +31,7 @@ export interface YtNamespace {
       };
     },
   ) => YtPlayer;
-  PlayerState: { ENDED: number; PLAYING: number };
+  PlayerState: { ENDED: number; PLAYING: number; PAUSED: number; BUFFERING: number };
 }
 
 export interface XWidgets {

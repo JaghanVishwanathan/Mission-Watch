@@ -11,6 +11,7 @@ const AREAS = ['main', 'side1', 'side2'];
 export interface SavedLayout {
   mode?: LayoutMode;
   order?: string[];
+  chatOpen?: boolean;
 }
 
 const STORAGE_KEY = 'mw-live-layout';

@@ -2,27 +2,28 @@
   // Full width: the players are the point of this page.
   max-width: none;
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-5);
+  padding-top: var(--space-5);
 }
 
 // ── Header ──
 .head {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--space-5);
-  padding-bottom: var(--space-5);
+  gap: var(--space-3) var(--space-5);
+  padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--border);
 }
 
 .ident {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
   min-width: 0;
 
   h1 {
-    font-size: var(--fs-3xl);
+    font-size: var(--fs-2xl);
   }
 }
 
@@ -79,9 +80,8 @@
 
 .t0 {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
   justify-items: end;
-  --countdown-label: var(--text-muted);
 }
 
 .t0-when {
@@ -98,25 +98,31 @@
   color: var(--status-warning);
 }
 
+// Compact single-line countdown, sized like a mission clock.
+.clock {
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  line-height: 1;
+}
+
 // ── Consent ──
 .consent {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-5);
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
 
   h2 {
     font-size: var(--fs-md);
     letter-spacing: var(--tracking-wide);
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-1);
   }
 
   p {
-    max-width: 72ch;
+    max-width: 110ch;
     color: var(--text-secondary);
     font-size: var(--fs-sm);
   }
@@ -200,7 +206,13 @@
 
   // Focus: one large main tile with two stacked tiles beside it.
   &--focus {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    // The side column is sized so the main video is exactly 16:9 and level with both side
+    // tiles. Each card has 47px of chrome (44px header + borders), so for main width M, side
+    // width S and gap g: M·9/16 = 2·S·9/16 + 47 + g, i.e. M = 2S + 112px (with g = 16px).
+    // Main width is also capped so the whole row fits under the header on short, wide screens.
+    --main-w: min(calc((200% - 2 * var(--space-4) + 112px) / 3), calc((100dvh - 330px) * 16 / 9));
+    grid-template-columns: var(--main-w) calc((var(--main-w) - 112px) / 2);
+    justify-content: center;
     grid-template-areas:
       'main side1'
       'main side2';
@@ -415,6 +427,6 @@
     text-align: left;
   }
   .ident h1 {
-    font-size: var(--fs-2xl);
+    font-size: var(--fs-xl);
   }
 }

@@ -45,7 +45,7 @@ describe('Live', () => {
     expect(el.querySelector('mw-youtube-player')).toBeNull();
     expect(el.textContent).toContain('Load YouTube and X content');
     // Every panel offers a way to watch on the original platform.
-    expect(el.querySelectorAll('mw-stream-card a[target="_blank"]').length).toBe(3);
+    expect(el.querySelectorAll('mw-stream-card a.ext[target="_blank"]').length).toBe(3);
     expect(el.querySelector('h1')?.textContent).toContain(launch.missionName);
     expect(el.textContent).toContain('Liftoff');
   });
@@ -77,6 +77,11 @@ describe('Live', () => {
       )!.style.gridArea;
     expect(area('NASASpaceflight')).toContain('main');
 
+    // Chat starts minimised so it never covers the side videos.
+    expect(el.querySelector<HTMLElement>('aside.chat-pop')!.hidden).toBe(true);
+    el.querySelector<HTMLButtonElement>('.chat-fab')!.click();
+    await fixture.whenStable();
+    expect(el.querySelector<HTMLElement>('aside.chat-pop')!.hidden).toBe(false);
     el.querySelector<HTMLButtonElement>('[aria-label="Minimise community chat"]')!.click();
     await fixture.whenStable();
     expect(el.querySelector<HTMLElement>('aside.chat-pop')!.hidden).toBe(true);

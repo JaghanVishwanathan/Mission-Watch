@@ -219,7 +219,8 @@ export class Live {
       this.savedLayout.order,
     ),
   );
-  protected readonly chatOpen = signal(!globalThis.matchMedia?.('(max-width: 719px)').matches);
+  /** Starts minimised so the popup never covers the side videos until the viewer opens it. */
+  protected readonly chatOpen = signal(this.savedLayout.chatOpen === true);
 
   protected areaOf(id: string): string {
     return layoutOps.areaOf(this.order(), id);
@@ -342,7 +343,13 @@ export class Live {
   constructor() {
     const tick = setInterval(() => this.now.set(Date.now()), 1000);
     const refresh = setInterval(() => this.launch.reload(), REFRESH_MS);
-    effect(() => layoutOps.writeLayout({ mode: this.layout(), order: this.order() }));
+    effect(() =>
+      layoutOps.writeLayout({
+        mode: this.layout(),
+        order: this.order(),
+        chatOpen: this.chatOpen(),
+      }),
+    );
     inject(DestroyRef).onDestroy(() => {
       clearInterval(tick);
       clearInterval(refresh);
