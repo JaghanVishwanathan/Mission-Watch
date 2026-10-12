@@ -69,6 +69,26 @@ export class DataSources {
       limitations: 'Requires an API key, which must stay on the server (Phase 4).',
     },
     {
+      name: 'YouTube (Everyday Astronaut, NASASpaceflight)',
+      url: 'https://www.youtube.com',
+      use: 'Embedded livestreams and Live Chat on the Live Mission Control page',
+      refresh: 'Real time, through the official YouTube player',
+      status: 'Optional',
+      license: 'Broadcasts belong to their creators; shown with attribution via official embeds',
+      limitations:
+        'Loads only after you allow third-party content. Live status is what the player reports. Embedded chat is not available on mobile browsers.',
+    },
+    {
+      name: 'X (SpaceX)',
+      url: 'https://x.com/SpaceX',
+      use: 'The official SpaceX broadcast post and discussion on the Live Mission Control page',
+      refresh: 'Real time, through X embeds',
+      status: 'Optional',
+      license: 'Posts belong to their authors; shown via official X embeds',
+      limitations:
+        'Loads only after you allow third-party content. X does not report broadcast status to embeds, and some broadcasts can only be watched on X.',
+    },
+    {
       name: 'Open-Meteo',
       url: 'https://open-meteo.com/',
       use: 'Launch-site weather for exploratory analysis and viewing conditions',

@@ -13,6 +13,7 @@ interface NavItem {
 
 /** Shown inline in the top bar on wide screens. */
 export const PRIMARY_NAV: NavItem[] = [
+  { label: 'Live', path: '/live' },
   { label: 'Launches', path: '/launches' },
   { label: 'Analytics', path: '/analytics' },
   { label: 'Globe', path: '/globe' },

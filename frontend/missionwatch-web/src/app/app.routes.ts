@@ -39,6 +39,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/analytics/analytics').then((m) => m.Analytics),
       },
       {
+        path: 'live',
+        title: 'Live Mission Control',
+        loadComponent: () => import('./features/live/live').then((m) => m.Live),
+      },
+      {
         path: 'globe',
         title: 'Mission Globe',
         loadComponent: placeholder,
