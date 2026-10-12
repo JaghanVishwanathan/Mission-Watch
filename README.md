@@ -9,6 +9,7 @@
 - **Dashboard:** the next launch with a live countdown, upcoming and recent launches, featured missions, and real launch statistics for this year and all time.
 - **Launch Explorer:** search, status, provider and date filters, sorting, and grid or list views. Filter state lives in the URL, so views are shareable.
 - **Mission detail:** the published mission timeline, sourced launch updates, vehicle specifications, webcasts, credited launch imagery and related NASA photos. Dates are shown only to the precision the source knows, and missing data is labelled *Unavailable*, never invented.
+- **Live Mission Control (`/live`):** Everyday Astronaut, NASASpaceflight and SpaceX broadcasts side by side, an audio selector, YouTube Live Chat and the SpaceX discussion on X in a large 2×2 grid, plus a mission countdown and timeline from Launch Library 2. Third-party players load only after the viewer allows them, and a stream is marked *Live* only when the platform reports it.
 - **Analytics:** every orbital launch attempt since 1957: launches per year and month, provider volume and outcome distribution in Apache ECharts. Every chart has a table view, and success rates are withheld for small samples.
 - **Rate-limit aware:** Launch Library 2 allows about 15 requests per hour per visitor, so responses are cached in the browser. When a refresh fails, the page shows the saved copy and labels it.
 - **Transparency:** source and freshness on every block of data, licence credits, a data sources page that documents how source data is interpreted, and a clear split between measured, derived and estimated values.
@@ -48,6 +49,16 @@ npm test -- --watch=false
 npm run build
 ```
 
+## Updating Live Mission Control for a launch
+
+Every stream link is in one file: [`frontend/missionwatch-web/src/app/features/live/live-mission.config.ts`](frontend/missionwatch-web/src/app/features/live/live-mission.config.ts). Before a launch:
+
+1. Paste the Everyday Astronaut and NASASpaceflight YouTube livestream URLs, video IDs or full `<iframe>` embed codes into `video`.
+2. Paste the SpaceX broadcast (`https://x.com/i/broadcasts/…` or X's full `twitter-broadcast` embed code) into `broadcastUrl`. Without a broadcast, a post URL in `postUrl` is embedded instead.
+3. Optionally set `launch.ll2LaunchId` to pin a launch. Otherwise the page follows the next SpaceX launch.
+
+Commit and push to `main`; the Pages workflow redeploys. Empty links are fine: the panel shows *Unavailable* with a link to the channel.
+
 ## Deployment
 
 On every push to `main`, `.github/workflows/deploy-pages.yml` builds the frontend and publishes it to GitHub Pages. To enable it, go to the repository's **Settings → Pages** and set **Source** to **GitHub Actions**. The site is then served at `https://<user>.github.io/<repo-name>/`. The workflow builds a fresh GCAT snapshot on every deploy and rebuilds weekly.
@@ -55,6 +66,7 @@ On every push to `main`, `.github/workflows/deploy-pages.yml` builds the fronten
 ## Documentation
 
 - [Software Requirements Specification](docs/SRS.md)
+- [Live Mission Control SRS](docs/live-mission-control-srs.md)
 - [Architecture and roadmap](docs/architecture.md)
 - [API (planned)](docs/api.md)
 

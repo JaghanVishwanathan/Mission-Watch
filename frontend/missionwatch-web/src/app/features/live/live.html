@@ -1,0 +1,296 @@
+<div class="page live">
+  <!-- Header: mission, vehicle, coverage, countdown -->
+  <header class="head">
+    <div class="ident">
+      <p class="overline">Live mission control</p>
+      <h1>{{ missionName() }}</h1>
+      <p class="sub">
+        @if (vehicle()) {
+          <span>{{ vehicle() }}</span>
+          <span aria-hidden="true">·</span>
+        }
+        <span class="coverage" [class]="'coverage coverage--' + coverage()">
+          @if (coverage() === 'live') {
+            <span class="dot" aria-hidden="true"></span>
+          }
+          {{ coverageLabel() }}
+        </span>
+        @if (l(); as launch) {
+          <span aria-hidden="true">·</span>
+          <a [routerLink]="['/launches', launch.id]">Mission details</a>
+        }
+      </p>
+      @if (missions.length > 1) {
+        <label class="selector">
+          <span class="overline">Mission</span>
+          <select
+            class="select"
+            [value]="mission().id"
+            (change)="selectMission($any($event.target).value)"
+          >
+            @for (m of missions; track m.id) {
+              <option [value]="m.id">{{ m.name || m.id }}</option>
+            }
+          </select>
+        </label>
+      }
+    </div>
+
+    <div class="t0" [attr.aria-busy]="launch.isLoading() && !l()">
+      @if (t0(); as target) {
+        @if (exactT0()) {
+          <mw-countdown class="clock" [target]="target" />
+        }
+        <p class="t0-when">
+          Target T-0
+          <time [attr.datetime]="target">{{ target | date: 'EEE d MMM y, HH:mm:ss zzzz' }}</time>
+          @if (!exactT0()) {
+            <span>(time not yet exact)</span>
+          }
+          @if (t0FromFallback()) {
+            <span class="warn">(configured fallback; live data unavailable)</span>
+          }
+        </p>
+      } @else if (launch.isLoading()) {
+        <mw-skeleton height="88px" width="min(420px, 100%)" />
+      } @else {
+        <p class="t0-when">Target time not yet known.</p>
+      }
+    </div>
+  </header>
+
+  <!-- Consent gate for third-party content (NFR-008) -->
+  @if (!consented()) {
+    <section class="consent" aria-labelledby="consent-title">
+      <div>
+        <h2 id="consent-title">Load broadcasts and chat?</h2>
+        <p>
+          The streams and chat are provided by YouTube (Google) and X. Loading them sends data such
+          as your IP address to those services and may set cookies. The timeline below works without
+          them.
+        </p>
+      </div>
+      <button type="button" class="btn btn--primary" (click)="setConsent(true)">
+        Load YouTube and X content
+      </button>
+    </section>
+  }
+
+  <!-- Broadcasts -->
+  <section class="broadcasts" aria-labelledby="broadcasts-title">
+    <div class="bar">
+      <h2 id="broadcasts-title" class="overline">Broadcasts</h2>
+      <div class="controls">
+        <fieldset class="seg">
+          <legend class="overline">Layout</legend>
+          <label>
+            <input
+              type="radio"
+              name="layout"
+              value="focus"
+              [checked]="layout() === 'focus'"
+              (change)="layout.set('focus')"
+            />
+            <span>Focus</span>
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="layout"
+              value="grid"
+              [checked]="layout() === 'grid'"
+              (change)="layout.set('grid')"
+            />
+            <span>Grid</span>
+          </label>
+        </fieldset>
+        @if (consented() && audioSources().length) {
+          <fieldset class="seg">
+            <legend class="overline">Audio</legend>
+            <label>
+              <input
+                type="radio"
+                name="audio"
+                value="none"
+                [checked]="audio() === 'none'"
+                (change)="audio.set('none')"
+              />
+              <span>All muted</span>
+            </label>
+            @for (s of audioSources(); track s.id) {
+              <label>
+                <input
+                  type="radio"
+                  name="audio"
+                  [value]="s.id"
+                  [checked]="audio() === s.id"
+                  (change)="audio.set(s.id)"
+                />
+                <span>{{ s.broadcaster }}</span>
+              </label>
+            }
+          </fieldset>
+        }
+      </div>
+    </div>
+
+    <!--
+      Focus: one main tile and two side tiles; Grid: 2×2 with the community panel.
+      Cards keep their DOM order (moving an iframe reloads it); grid areas place them.
+    -->
+    <div [class]="'streams streams--' + layout()">
+      @for (s of streams(); track mission().id + s.id) {
+        @let status = statuses()[s.id];
+        @let pos = positionOf(s.id);
+        <mw-stream-card
+          [style.grid-area]="areaOf(s.id)"
+          [streamId]="s.id"
+          [broadcaster]="s.broadcaster"
+          [platform]="s.platform"
+          [status]="status"
+          [externalUrl]="s.externalUrl"
+          [externalLabel]="s.externalLabel"
+          [fixedRatio]="s.kind === 'youtube' || !!s.broadcastId"
+          [fill]="layout() === 'focus' && pos === 0"
+        >
+          @if (streams().length > 1) {
+            <div cardActions class="pos-actions">
+              @if (pos > 0) {
+                <button
+                  type="button"
+                  class="pos-btn"
+                  (click)="makeMain(s.id)"
+                  [attr.aria-label]="'Make ' + s.broadcaster + ' the main video'"
+                  title="Make main video"
+                >
+                  <mw-icon name="maximize" [size]="14" />
+                </button>
+              }
+              @if (pos > 1) {
+                <button
+                  type="button"
+                  class="pos-btn"
+                  (click)="move(s.id, -1)"
+                  [attr.aria-label]="'Move ' + s.broadcaster + ' up'"
+                  title="Move up"
+                >
+                  <mw-icon name="arrow-up" [size]="14" />
+                </button>
+              }
+              @if (pos > 0 && pos < streams().length - 1) {
+                <button
+                  type="button"
+                  class="pos-btn"
+                  (click)="move(s.id, 1)"
+                  [attr.aria-label]="'Move ' + s.broadcaster + ' down'"
+                  title="Move down"
+                >
+                  <mw-icon name="arrow-down" [size]="14" />
+                </button>
+              }
+            </div>
+          }
+          @if (!consented()) {
+            <div class="placeholder">
+              <p>{{ s.platform }} content is not loaded.</p>
+              <button type="button" class="btn" (click)="setConsent(true)">Load</button>
+            </div>
+          } @else if (s.videoId) {
+            <mw-youtube-player
+              [videoId]="s.videoId"
+              [title]="s.broadcaster + ' broadcast'"
+              [muted]="audio() !== s.id"
+              [scheduledStart]="s.scheduledStart"
+              (status)="setStatus(s.id, $event)"
+            />
+          } @else if (s.broadcastId) {
+            <mw-x-broadcast
+              [broadcastId]="s.broadcastId"
+              [title]="s.broadcaster + ' broadcast on X'"
+              (status)="setStatus(s.id, $event)"
+            />
+          } @else if (s.postId) {
+            <mw-x-post [postId]="s.postId" (status)="setStatus(s.id, $event)" />
+          }
+        </mw-stream-card>
+      }
+
+      @if (layout() === 'grid') {
+        <section class="community" aria-labelledby="community-title">
+          <h3 id="community-title">Community</h3>
+          <mw-community-panel
+            [chatSources]="chatSources()"
+            [xDiscussion]="xDiscussion()"
+            [consented]="consented()"
+          />
+        </section>
+      }
+    </div>
+    @if (consented()) {
+      <p class="fine">
+        Players start muted. Pick an audio source above to hear one YouTube stream; the X player has
+        its own volume control that Mission Watch cannot change. Simultaneous playback depends on
+        your browser.
+        <button type="button" class="link-btn" (click)="setConsent(false)">
+          Stop loading third-party content
+        </button>
+      </p>
+    }
+  </section>
+
+  <!-- Timeline -->
+  <section class="panel" aria-labelledby="timeline-title">
+    <div class="panel-head">
+      <h2 id="timeline-title">Mission timeline</h2>
+      @if (meta(); as m) {
+        <mw-freshness [meta]="m" [staleAfterMs]="3_600_000" />
+      }
+    </div>
+    @if (loadError(); as err) {
+      <p class="warn-box" role="status">
+        <mw-icon name="alert" [size]="14" />
+        {{ l() ? 'Showing the last known schedule. ' : '' }}{{ err }}
+        <button type="button" class="link-btn" (click)="launch.reload()">Retry</button>
+      </p>
+    }
+    <p class="fine">
+      Times are shown in your local timezone. Events are confirmed only by launch data, never by
+      what a stream shows.
+    </p>
+    <mw-mission-timeline [events]="events()" [currentId]="currentEventId()" />
+  </section>
+
+  <!-- Focus layout: community as a floating, minimisable popup -->
+  @if (layout() === 'focus') {
+    <aside id="chat-popup" class="chat-pop" aria-labelledby="chat-pop-title" [hidden]="!chatOpen()">
+      <div class="chat-pop__head">
+        <h3 id="chat-pop-title">Community</h3>
+        <button
+          type="button"
+          class="pos-btn"
+          (click)="chatOpen.set(false)"
+          aria-label="Minimise community chat"
+          aria-controls="chat-popup"
+        >
+          <mw-icon name="minus" [size]="16" />
+        </button>
+      </div>
+      <mw-community-panel
+        [chatSources]="chatSources()"
+        [xDiscussion]="xDiscussion()"
+        [consented]="consented()"
+      />
+    </aside>
+    @if (!chatOpen()) {
+      <button
+        type="button"
+        class="chat-fab"
+        (click)="chatOpen.set(true)"
+        aria-controls="chat-popup"
+        [attr.aria-expanded]="false"
+      >
+        <mw-icon name="chat" [size]="18" /> Chat
+      </button>
+    }
+  }
+</div>

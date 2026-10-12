@@ -8,9 +8,17 @@
 
   <nav class="primary" aria-label="Primary">
     @for (item of primaryNav; track item.path) {
-      <a [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{
-        item.label
-      }}</a>
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        [class.live]="item.live"
+      >
+        @if (item.live) {
+          <span class="live-dot" aria-hidden="true"></span>
+        }
+        {{ item.label }}</a
+      >
     }
   </nav>
 
@@ -55,7 +63,12 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: !!item.exact }"
           ariaCurrentWhenActive="page"
-          >{{ item.label }}</a
+          [class.live]="item.live"
+        >
+          @if (item.live) {
+            <span class="live-dot" aria-hidden="true"></span>
+          }
+          {{ item.label }}</a
         >
       </li>
     }

@@ -242,3 +242,33 @@ main {
     display: none;
   }
 }
+
+// ── Live nav item: red, blinking ──
+// Reduced-motion users get a steady red (the global rule stops the animation).
+.primary a.live,
+.menu a.live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--status-critical);
+  opacity: 1;
+  animation: live-blink 1.4s ease-in-out infinite;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+@keyframes live-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
