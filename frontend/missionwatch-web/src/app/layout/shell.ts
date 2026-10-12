@@ -9,11 +9,13 @@ interface NavItem {
   label: string;
   path: string;
   exact?: boolean;
+  /** Shown in blinking red with a dot, for the live coverage page. */
+  live?: boolean;
 }
 
 /** Shown inline in the top bar on wide screens. */
 export const PRIMARY_NAV: NavItem[] = [
-  { label: 'Live', path: '/live' },
+  { label: 'Live', path: '/live', live: true },
   { label: 'Launches', path: '/launches' },
   { label: 'Analytics', path: '/analytics' },
   // Hidden until these features ship; the routes still exist.
