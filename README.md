@@ -59,9 +59,6 @@ Every stream link is in one file: [`frontend/missionwatch-web/src/app/features/l
 
 Commit and push to `main`; the Pages workflow redeploys. Empty links are fine: the panel shows *Unavailable* with a link to the channel.
 
-## Deployment
-
-On every push to `main`, `.github/workflows/deploy-pages.yml` builds the frontend and publishes it to GitHub Pages. To enable it, go to the repository's **Settings → Pages** and set **Source** to **GitHub Actions**. The site is then served at `https://<user>.github.io/<repo-name>/`. The workflow builds a fresh GCAT snapshot on every deploy and rebuilds weekly.
 
 ## Documentation
 
