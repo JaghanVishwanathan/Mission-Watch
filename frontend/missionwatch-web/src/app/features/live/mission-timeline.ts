@@ -23,7 +23,11 @@ const STATUS_ICON: Record<TimelineEventStatus, string> = {
     @if (events().length) {
       <ol class="events">
         @for (e of events(); track e.id) {
-          <li [class]="'ev ev--' + e.status">
+          <li
+            [class]="'ev ev--' + e.status"
+            [class.ev--current]="e.id === currentId()"
+            [attr.aria-current]="e.id === currentId() ? 'step' : null"
+          >
             <span class="marker" aria-hidden="true"></span>
             <span class="offset mono">{{
               e.offsetSeconds !== undefined ? formatOffset(e.offsetSeconds) : ''
@@ -99,6 +103,19 @@ const STATUS_ICON: Record<TimelineEventStatus, string> = {
       border-style: dashed;
       border-color: var(--status-warning);
     }
+    .ev--current {
+      background: color-mix(in srgb, var(--signal) 8%, transparent);
+      box-shadow: inset 2px 0 0 var(--signal);
+      padding-left: var(--space-2);
+    }
+    .ev--current .marker {
+      border-color: var(--signal);
+      background: var(--signal);
+    }
+    .ev--current .title,
+    .ev--current .offset {
+      color: var(--signal);
+    }
     .offset {
       font-size: var(--fs-sm);
       color: var(--text-secondary);
@@ -158,6 +175,8 @@ const STATUS_ICON: Record<TimelineEventStatus, string> = {
 })
 export class MissionTimeline {
   readonly events = input.required<TimelineEvent[]>();
+  /** Next event ahead of the clock. */
+  readonly currentId = input<string>();
   protected readonly formatOffset = formatOffset;
   protected readonly label = EVENT_STATUS_LABEL;
   protected readonly icon = STATUS_ICON;

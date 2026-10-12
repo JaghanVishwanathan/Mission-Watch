@@ -14,7 +14,6 @@ import { Router, RouterLink } from '@angular/router';
 import { of, switchMap } from 'rxjs';
 import { describeError, LAUNCH_DATA } from '../../core/data';
 import { DataMeta, DataResponse, Launch } from '../../core/models';
-import { Countdown } from '../../shared/ui/countdown';
 import { FreshnessIndicator } from '../../shared/ui/freshness-indicator';
 import { Icon } from '../../shared/ui/icon';
 import { Skeleton } from '../../shared/ui/skeleton';
@@ -25,10 +24,12 @@ import {
   buildTimeline,
   Coverage,
   coverageOf,
+  parseXBroadcastId,
   parseXPostId,
   parseYoutubeId,
   safeHttpsUrl,
 } from './live-util';
+import { MissionArc } from './mission-arc';
 import { MissionTimeline } from './mission-timeline';
 import { StreamCard } from './stream-card';
 import { XPost } from './x-post';
@@ -45,6 +46,7 @@ interface StreamView {
   platform: 'YouTube' | 'X';
   videoId?: string;
   postId?: string;
+  broadcastId?: string;
   scheduledStart?: string;
   externalUrl?: string;
   externalLabel: string;
@@ -89,27 +91,30 @@ function toView(s: LiveMissionConfig['streams'][number]): StreamView {
     };
   }
   const postId = parseXPostId(s.postUrl);
+  const broadcastId = parseXBroadcastId(s.broadcastUrl);
   return {
     id: s.id,
     kind: 'x',
     broadcaster: s.broadcaster,
     platform: 'X',
     postId,
+    broadcastId,
     scheduledStart: s.scheduledStart,
     externalUrl:
       safeHttpsUrl(s.broadcastUrl) ?? safeHttpsUrl(s.postUrl) ?? safeHttpsUrl(s.profileUrl),
     externalLabel: s.broadcastUrl || s.postUrl ? 'Watch on X' : 'Open SpaceX on X',
-    missing: postId
-      ? undefined
-      : s.broadcastUrl
-        ? 'This broadcast can only be watched on X.'
-        : 'No broadcast post has been set for this mission yet.',
+    missing:
+      postId || broadcastId
+        ? undefined
+        : s.broadcastUrl
+          ? 'The configured X broadcast link is not valid.'
+          : 'No broadcast has been set for this mission yet.',
   };
 }
 
 function initialStatus(v: StreamView, consented: boolean, now: number): StreamStatus {
   const upcoming = !!v.scheduledStart && Date.parse(v.scheduledStart) > now;
-  if (!v.videoId && !v.postId) {
+  if (!v.videoId && !v.postId && !v.broadcastId) {
     return upcoming
       ? { state: 'SCHEDULED', detail: 'Broadcast expected. The link is not published yet.' }
       : { state: 'UNAVAILABLE', detail: v.missing };
@@ -128,9 +133,9 @@ function initialStatus(v: StreamView, consented: boolean, now: number): StreamSt
     DatePipe,
     RouterLink,
     CommunityPanel,
-    Countdown,
     FreshnessIndicator,
     Icon,
+    MissionArc,
     MissionTimeline,
     Skeleton,
     StreamCard,
@@ -255,7 +260,7 @@ export class Live {
     return !p || p === 'second' || p === 'minute';
   });
 
-  private readonly now = signal(Date.now());
+  protected readonly now = signal(Date.now());
   protected readonly events = computed(() => {
     const l = this.l();
     return buildTimeline({
@@ -269,6 +274,10 @@ export class Live {
       now: this.now(),
     });
   });
+  /** The next event still ahead of the clock, highlighted on the arc and in the list. */
+  protected readonly currentEventId = computed(
+    () => this.events().find((e) => e.plannedAt && Date.parse(e.plannedAt) > this.now())?.id,
+  );
 
   // ── Community ──
   protected readonly chatSources = computed<ChatSource[]>(() =>

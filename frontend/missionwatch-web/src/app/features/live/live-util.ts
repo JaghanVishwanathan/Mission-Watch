@@ -3,9 +3,16 @@ import { ConfiguredEvent, StreamState, TimelineEvent, TimelineEventStatus } from
 
 const YT_ID = /^[\w-]{11}$/;
 
-/** Accepts a bare video ID or a watch, youtu.be, /live/, /embed/ or /shorts/ URL. */
-export function parseYoutubeId(value: string | undefined): string | undefined {
+/** Pasted embed code (<iframe src=…>, <blockquote><a href=…>) reduced to its first URL. */
+export function extractUrl(value: string | undefined): string | undefined {
   const v = value?.trim();
+  if (!v || !v.includes('<')) return v;
+  return v.match(/(?:src|href)="([^"]+)"/)?.[1];
+}
+
+/** Accepts a bare video ID, a watch, youtu.be, /live/, /embed/ or /shorts/ URL, or YouTube's embed code. */
+export function parseYoutubeId(value: string | undefined): string | undefined {
+  const v = extractUrl(value);
   if (!v) return undefined;
   if (YT_ID.test(v)) return v;
   try {
@@ -22,7 +29,7 @@ export function parseYoutubeId(value: string | undefined): string | undefined {
 
 /** The numeric post ID from an x.com or twitter.com status URL. */
 export function parseXPostId(value: string | undefined): string | undefined {
-  const v = value?.trim();
+  const v = extractUrl(value);
   if (!v) return undefined;
   try {
     const url = new URL(v);
@@ -33,9 +40,24 @@ export function parseXPostId(value: string | undefined): string | undefined {
   }
 }
 
+/** The broadcast ID from an x.com/i/broadcasts/… URL or X's twitter-broadcast embed code. */
+export function parseXBroadcastId(value: string | undefined): string | undefined {
+  const fromAttr = value?.match(/data-broadcast-id="(\w+)"/)?.[1];
+  if (fromAttr) return fromAttr;
+  const v = extractUrl(value);
+  if (!v) return undefined;
+  try {
+    const url = new URL(v);
+    if (!/(^|\.)(x|twitter)\.com$/.test(url.hostname)) return undefined;
+    return url.pathname.match(/^\/i\/broadcasts\/(\w+)/)?.[1];
+  } catch {
+    return undefined;
+  }
+}
+
 /** Only absolute https links from config are rendered as hrefs. */
 export function safeHttpsUrl(value: string | undefined): string | undefined {
-  const v = value?.trim();
+  const v = extractUrl(value);
   if (!v) return undefined;
   try {
     return new URL(v).protocol === 'https:' ? v : undefined;

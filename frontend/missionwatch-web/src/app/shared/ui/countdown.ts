@@ -86,7 +86,7 @@ import { countdownParts } from '../../core/util/time';
       text-transform: uppercase;
       font-weight: 600;
       letter-spacing: var(--tracking-wide);
-      color: var(--countdown-label, rgba(255, 255, 255, 0.6));
+      color: rgba(255, 255, 255, 0.6);
     }
   `,
 })

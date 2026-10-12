@@ -8,9 +8,10 @@ import { LiveMissionConfig } from './live.models';
  * Every embed link used by the /live page lives here and nowhere else.
  * Before a launch, update:
  *   1. `video` for Everyday Astronaut and NASASpaceflight. Paste the YouTube
- *      URL or the 11-character video ID of each livestream.
- *   2. `postUrl` for SpaceX: the x.com/SpaceX/status/… post carrying the
- *      broadcast. `broadcastUrl` is optional (x.com/i/broadcasts/…).
+ *      URL, the 11-character video ID, or YouTube's whole <iframe> embed code.
+ *   2. `broadcastUrl` for SpaceX: the x.com/i/broadcasts/… link, or X's whole
+ *      <blockquote class="twitter-broadcast"> embed code. Without a broadcast,
+ *      `postUrl` (x.com/SpaceX/status/…) embeds a post instead.
  *   3. Optionally `launch.ll2LaunchId` to pin a specific launch. Otherwise
  *      the page follows the next upcoming launch from `nextFromProvider`.
  *
@@ -43,7 +44,7 @@ export const LIVE_MISSIONS: LiveMissionConfig[] = [
         platform: 'youtube',
         id: 'nasaspaceflight',
         broadcaster: 'NASASpaceflight',
-        video: '',
+        video: 'https://www.youtube.com/embed/KwOyWO98vGI',
         channelUrl: 'https://www.youtube.com/@NASASpaceflight/live',
       },
       {
@@ -51,7 +52,7 @@ export const LIVE_MISSIONS: LiveMissionConfig[] = [
         id: 'spacex',
         broadcaster: 'SpaceX',
         postUrl: '',
-        broadcastUrl: '',
+        broadcastUrl: 'https://x.com/i/broadcasts/1yKAPwdemygxb',
         profileUrl: 'https://x.com/SpaceX',
       },
     ],

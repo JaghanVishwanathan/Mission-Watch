@@ -26,10 +26,10 @@ export interface XStreamConfig {
   platform: 'x';
   id: string;
   broadcaster: string;
-  /** Post that carries the broadcast, e.g. https://x.com/SpaceX/status/1234567890. Embedded inline. */
-  postUrl: string;
-  /** Optional direct broadcast link, e.g. https://x.com/i/broadcasts/1abc… (opened externally only). */
+  /** Live broadcast, x.com/i/broadcasts/… or X's embed code. Embedded inline when set. */
   broadcastUrl?: string;
+  /** Post, e.g. https://x.com/SpaceX/status/123. Embedded when there is no broadcast; its replies form the discussion. */
+  postUrl: string;
   /** Opened when nothing more specific is configured. */
   profileUrl: string;
   scheduledStart?: string;

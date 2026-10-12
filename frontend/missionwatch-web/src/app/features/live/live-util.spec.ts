@@ -1,5 +1,12 @@
 import { LIVE_MISSIONS } from './live-mission.config';
-import { buildTimeline, coverageOf, parseXPostId, parseYoutubeId, safeHttpsUrl } from './live-util';
+import {
+  buildTimeline,
+  coverageOf,
+  parseXBroadcastId,
+  parseXPostId,
+  parseYoutubeId,
+  safeHttpsUrl,
+} from './live-util';
 
 describe('parseYoutubeId', () => {
   it('accepts bare IDs and common URL shapes', () => {
@@ -29,6 +36,23 @@ describe('parseXPostId', () => {
     expect(parseXPostId('https://x.com/i/broadcasts/1abc')).toBeUndefined();
     expect(parseXPostId('https://x.com/SpaceX')).toBeUndefined();
     expect(parseXPostId('https://evil.com/SpaceX/status/123')).toBeUndefined();
+  });
+});
+
+describe('pasted embed codes', () => {
+  it('reads the video ID from a YouTube iframe snippet', () => {
+    const iframe =
+      '<iframe width="560" height="315" src="https://www.youtube.com/embed/KwOyWO98vGI?si=c4LswoqdRQ1P2UoI" title="YouTube video player" allowfullscreen></iframe>';
+    expect(parseYoutubeId(iframe)).toBe('KwOyWO98vGI');
+  });
+
+  it('reads the broadcast ID from an X broadcast snippet or URL', () => {
+    const quote =
+      '<blockquote class="twitter-broadcast" data-broadcast-id="1yKAPwdemygxb"><a href="https://x.com/i/broadcasts/1yKAPwdemygxb">Broadcast</a></blockquote> <script async src="https://platform.x.com/widgets.js" charset="utf-8"></script>';
+    expect(parseXBroadcastId(quote)).toBe('1yKAPwdemygxb');
+    expect(parseXBroadcastId('https://x.com/i/broadcasts/1yKAPwdemygxb')).toBe('1yKAPwdemygxb');
+    expect(parseXBroadcastId('https://x.com/SpaceX/status/123')).toBeUndefined();
+    expect(safeHttpsUrl(quote)).toBe('https://x.com/i/broadcasts/1yKAPwdemygxb');
   });
 });
 
@@ -140,6 +164,7 @@ describe('LIVE_MISSIONS config', () => {
           expect(safeHttpsUrl(s.channelUrl)).toBeDefined();
         } else {
           if (s.postUrl) expect(parseXPostId(s.postUrl)).toBeDefined();
+          if (s.broadcastUrl) expect(parseXBroadcastId(s.broadcastUrl)).toBeDefined();
           expect(safeHttpsUrl(s.profileUrl)).toBeDefined();
         }
       }

@@ -38,9 +38,6 @@
 
     <div class="t0" [attr.aria-busy]="launch.isLoading() && !l()">
       @if (t0(); as target) {
-        @if (exactT0()) {
-          <mw-countdown [target]="target" [display]="true" />
-        }
         <p class="t0-when">
           Target T-0
           <time [attr.datetime]="target">{{ target | date: 'EEE d MMM y, HH:mm:ss zzzz' }}</time>
@@ -52,12 +49,20 @@
           }
         </p>
       } @else if (launch.isLoading()) {
-        <mw-skeleton height="88px" width="min(420px, 100%)" />
+        <mw-skeleton height="20px" width="min(320px, 100%)" />
       } @else {
         <p class="t0-when">Target time not yet known.</p>
       }
     </div>
   </header>
+
+  <!-- Mission arc: live clock and event progress -->
+  <mw-mission-arc
+    [events]="events()"
+    [t0]="exactT0() ? t0() : undefined"
+    [now]="now()"
+    [missionName]="missionName()"
+  />
 
   <!-- Consent gate for third-party content (NFR-008) -->
   @if (!consented()) {
@@ -134,8 +139,12 @@
               [scheduledStart]="s.scheduledStart"
               (status)="setStatus(s.id, $event)"
             />
-          } @else if (s.postId) {
-            <mw-x-post [postId]="s.postId" (status)="setStatus(s.id, $event)" />
+          } @else if (s.broadcastId || s.postId) {
+            <mw-x-post
+              [broadcastId]="s.broadcastId"
+              [postId]="s.postId"
+              (status)="setStatus(s.id, $event)"
+            />
           }
         </mw-stream-card>
       }
@@ -172,7 +181,7 @@
         Times are shown in your local timezone. Events are confirmed only by launch data, never by
         what a stream shows.
       </p>
-      <mw-mission-timeline [events]="events()" />
+      <mw-mission-timeline [events]="events()" [currentId]="currentEventId()" />
     </section>
 
     <section class="panel community" aria-labelledby="community-title">

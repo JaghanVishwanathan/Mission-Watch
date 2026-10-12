@@ -35,6 +35,8 @@ export interface YtNamespace {
 }
 
 export interface XWidgets {
+  /** Renders any widget blockquotes (e.g. twitter-broadcast) inside the element. */
+  load(el?: HTMLElement): Promise<unknown> | void;
   createTweet(
     id: string,
     el: HTMLElement,
@@ -82,7 +84,7 @@ export class EmbedScripts {
     this.x ??= new Promise<XWidgets>((resolve, reject) => {
       const w = this.win;
       if (w.twttr?.widgets) return resolve(w.twttr.widgets);
-      this.inject('https://platform.twitter.com/widgets.js', reject, () => {
+      this.inject('https://platform.x.com/widgets.js', reject, () => {
         if (w.twttr?.ready) w.twttr.ready((t) => resolve(t.widgets));
         else reject(new Error('X widgets did not initialise'));
       });
