@@ -1,22 +1,29 @@
-import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Launch, UPCOMING_STATUSES } from '../../core/models';
+import { formatLaunchTime } from '../../core/util/launch-time';
 import { Countdown } from './countdown';
 import { Icon } from './icon';
 import { StatusBadge } from './status-badge';
 
 @Component({
   selector: 'mw-launch-card',
-  imports: [DatePipe, RouterLink, Countdown, Icon, StatusBadge],
+  imports: [RouterLink, Countdown, Icon, StatusBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.row]': "layout() === 'row'" },
   template: `
     @let l = launch();
     <article class="card">
       <div class="art" [attr.data-category]="l.category ?? 'unknown'">
-        @if (l.imageUrl && !imageFailed()) {
-          <img [src]="l.imageUrl" [alt]="''" loading="lazy" (error)="imageFailed.set(true)" />
+        @if ((l.thumbnailUrl ?? l.imageUrl) && !imageFailed()) {
+          <img
+            [src]="l.thumbnailUrl ?? l.imageUrl"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerpolicy="no-referrer"
+            (error)="imageFailed.set(true)"
+          />
         } @else {
           <mw-icon name="rocket" [size]="layout() === 'row' ? 22 : 34" />
           <span class="visually-hidden">No mission image available</span>
@@ -25,7 +32,7 @@ import { StatusBadge } from './status-badge';
       <div class="body">
         <div class="meta-top">
           <mw-status-badge [status]="l.status" />
-          @if (isUpcoming()) {
+          @if (isUpcoming() && !l.timePrecision) {
             <mw-countdown [target]="l.scheduledTime" [compact]="true" />
           }
         </div>
@@ -36,9 +43,7 @@ import { StatusBadge } from './status-badge';
         <ul class="facts">
           <li>
             <mw-icon name="calendar" [size]="14" />
-            <time [attr.datetime]="l.scheduledTime">{{
-              l.scheduledTime | date: 'EEE d MMM y, HH:mm'
-            }}</time>
+            <time [attr.datetime]="l.scheduledTime">{{ when() }}</time>
           </li>
           <li>
             <mw-icon name="pin" [size]="14" />{{ l.site.name }},
@@ -75,6 +80,9 @@ import { StatusBadge } from './status-badge';
       border-color: var(--accent);
     }
     .art {
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
       aspect-ratio: 16 / 7;
       display: grid;
       place-items: center;
@@ -113,7 +121,10 @@ import { StatusBadge } from './status-badge';
         ),
         linear-gradient(135deg, #131b36, #233466);
     }
+    /* Absolutely positioned so a large photo never stretches the card. */
     .art img {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -198,5 +209,8 @@ export class LaunchCard {
   readonly layout = input<'grid' | 'row'>('grid');
 
   protected readonly imageFailed = signal(false);
+  protected readonly when = computed(() =>
+    formatLaunchTime(this.launch().scheduledTime, this.launch().timePrecision),
+  );
   protected readonly isUpcoming = computed(() => UPCOMING_STATUSES.includes(this.launch().status));
 }

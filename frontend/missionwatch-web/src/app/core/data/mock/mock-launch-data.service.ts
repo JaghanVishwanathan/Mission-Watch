@@ -2,6 +2,7 @@ import { FactoryProvider } from '@angular/core';
 import { delay, Observable, of } from 'rxjs';
 import {
   AnalyticsFilter,
+  AnalyticsOptions,
   AnalyticsSummary,
   DataMeta,
   DataResponse,
@@ -11,7 +12,7 @@ import {
   Provider,
   UPCOMING_STATUSES,
 } from '../../models';
-import { applyAnalyticsFilter, computeAnalytics } from '../analytics';
+import { applyAnalyticsFilter, computeAnalytics, launchToRecord } from '../analytics';
 import { LAUNCH_DATA, LaunchDataSource } from '../launch-data-source';
 import { queryLaunches } from '../launch-query';
 import { buildMockCatalog } from './mock-catalog';
@@ -76,10 +77,31 @@ export class MockLaunchDataService implements LaunchDataSource {
   }
 
   getAnalytics(filter: AnalyticsFilter): Observable<DataResponse<AnalyticsSummary>> {
-    const records = applyAnalyticsFilter([...this.history, ...this.catalog], filter);
+    const records = applyAnalyticsFilter(this.records(), filter);
     return this.respond(computeAnalytics(records), [
       'Historical figures are synthetic and generated for layout purposes only.',
     ]);
+  }
+
+  getAnalyticsOptions(): Observable<DataResponse<AnalyticsOptions>> {
+    const counts = new Map<string, { id: string; name: string; launches: number }>();
+    const records = this.records();
+    for (const r of records) {
+      const c = counts.get(r.providerId) ?? { id: r.providerId, name: r.providerName, launches: 0 };
+      c.launches++;
+      counts.set(r.providerId, c);
+    }
+    const years = records.map((r) => Number(r.time.slice(0, 4)));
+    return this.respond({
+      firstYear: Math.min(...years),
+      lastYear: Math.max(...years),
+      providers: [...counts.values()].sort((a, b) => b.launches - a.launches),
+      notes: ['Synthetic demo history.'],
+    });
+  }
+
+  private records() {
+    return [...this.history, ...this.catalog].map(launchToRecord);
   }
 
   private respond<T>(data: T, warnings: string[] = []): Observable<DataResponse<T>> {

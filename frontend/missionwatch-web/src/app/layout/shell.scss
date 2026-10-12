@@ -134,26 +134,8 @@
 .content {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr auto;
   min-height: calc(100vh - var(--topbar-h));
-}
-
-.demo-banner {
-  display: flex;
-  gap: var(--space-2);
-  align-items: flex-start;
-  margin: var(--space-4) var(--space-6) 0;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  background: var(--accent-soft);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
-
-  mw-icon {
-    margin-top: 3px;
-    color: var(--accent-strong);
-  }
 }
 
 main {
@@ -168,14 +150,23 @@ main {
 }
 
 .footer {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  display: grid;
   gap: var(--space-2);
   padding: var(--space-5) var(--space-6);
   border-top: 1px solid var(--border);
   color: var(--text-muted);
   font-size: var(--fs-xs);
+}
+
+.credits {
+  max-width: 90ch;
+}
+
+.footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
 
 .scrim {
@@ -223,10 +214,6 @@ main {
 @media (max-width: 600px) {
   main {
     padding: var(--space-5) var(--space-4);
-  }
-
-  .demo-banner {
-    margin: var(--space-3) var(--space-4) 0;
   }
 
   .footer {

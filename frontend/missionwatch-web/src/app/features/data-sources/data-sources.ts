@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { CACHE_POLICY, LL2_LIST_LIMIT } from '../../core/config';
 import { Icon } from '../../shared/ui/icon';
 import { PageHeader } from '../../shared/ui/page-header';
 
@@ -7,9 +8,12 @@ interface Source {
   url: string;
   use: string;
   refresh: string;
-  status: 'Demo data in use' | 'Planned' | 'Optional';
+  status: 'Live' | 'Snapshot' | 'Planned' | 'Optional';
+  license: string;
   limitations: string;
 }
+
+const minutes = (ms: number) => Math.round(ms / 60_000);
 
 @Component({
   selector: 'mw-data-sources',
@@ -19,24 +23,41 @@ interface Source {
   styleUrl: './data-sources.scss',
 })
 export class DataSources {
+  protected readonly listLimit = LL2_LIST_LIMIT;
+  protected readonly listTtl = minutes(CACHE_POLICY.lists.ttlMs);
+  protected readonly detailTtl = minutes(CACHE_POLICY.detail.ttlMs);
+
   protected readonly sources: Source[] = [
     {
       name: 'Launch Library 2 (The Space Devs)',
-      url: 'https://ll.thespacedevs.com/docs/',
-      use: 'Launch schedules, providers, rockets, payloads, launch sites and outcomes',
-      refresh: 'Planned: upcoming launches every few minutes, historical records daily',
-      status: 'Planned',
+      url: 'https://thespacedevs.com/llapi',
+      use: 'Upcoming and recent launches, providers, rockets, pads, mission timelines, launch updates and webcast links',
+      refresh: `Lists cached ${minutes(CACHE_POLICY.lists.ttlMs)} min, mission details ${minutes(CACHE_POLICY.detail.ttlMs)} min, in your browser`,
+      status: 'Live',
+      license:
+        'Free tier; attribution to The Space Devs. Images carry their own credit and licence.',
       limitations:
-        'Community-maintained and rate limited. The current schedule overwrites older values, so MissionWatch stores its own snapshots.',
+        'About 15 anonymous requests per hour per visitor. The current schedule overwrites older values, so it cannot provide schedule history.',
+    },
+    {
+      name: 'GCAT, General Catalog of Artificial Space Objects (J. C. McDowell)',
+      url: 'https://planet4589.org/space/gcat',
+      use: 'Every orbital launch attempt since 1957, for the Analytics page and dashboard statistics',
+      refresh: 'Snapshot rebuilt on each deployment and weekly',
+      status: 'Snapshot',
+      license: 'CC BY 4.0',
+      limitations:
+        'Providers are recorded as launch agencies, which differ from Launch Library 2 names. Success means propulsive success into orbit.',
     },
     {
       name: 'NASA Image and Video Library',
-      url: 'https://images.nasa.gov/',
-      use: 'Mission photography and video',
-      refresh: 'On demand, cached',
-      status: 'Planned',
+      url: 'https://images.nasa.gov',
+      use: 'Related imagery on mission pages',
+      refresh: 'Searches cached for 24 hours',
+      status: 'Live',
+      license: 'Generally public domain; credits are shown with each image',
       limitations:
-        'Coverage is strongest for NASA missions. Attribution and source links are kept with every item.',
+        'Matched by keyword, so images may show related vehicles or earlier missions. Coverage is strongest for NASA missions.',
     },
     {
       name: 'NASA Open APIs',
@@ -44,22 +65,16 @@ export class DataSources {
       use: 'Supplementary astronomy content such as APOD',
       refresh: 'Daily',
       status: 'Optional',
-      limitations: 'Requires an API key, which stays on the server.',
-    },
-    {
-      name: 'JPL Solar System Dynamics APIs',
-      url: 'https://ssd-api.jpl.nasa.gov/',
-      use: 'Orbital context for small-body missions',
-      refresh: 'On demand',
-      status: 'Optional',
-      limitations: 'Relevant only to a subset of missions.',
+      license: 'Varies by dataset',
+      limitations: 'Requires an API key, which must stay on the server (Phase 4).',
     },
     {
       name: 'Open-Meteo',
       url: 'https://open-meteo.com/',
       use: 'Launch-site weather for exploratory analysis and viewing conditions',
       refresh: 'Hourly',
-      status: 'Optional',
+      status: 'Planned',
+      license: 'CC BY 4.0',
       limitations: 'Weather is never presented as proof that it caused a postponement.',
     },
     {
@@ -67,8 +82,9 @@ export class DataSources {
       url: 'https://api.spaceflightnewsapi.net/',
       use: 'Related news articles',
       refresh: 'Hourly',
-      status: 'Optional',
-      limitations: 'Each article links to and credits its original publisher.',
+      status: 'Planned',
+      license: 'Articles belong to their publishers',
+      limitations: 'Each article will link to and credit its original publisher.',
     },
   ];
 }

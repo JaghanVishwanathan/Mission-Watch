@@ -92,6 +92,17 @@ h1 {
   font-size: var(--fs-sm);
 }
 
+.tz {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+.section-note {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

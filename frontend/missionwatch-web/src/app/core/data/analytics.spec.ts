@@ -1,14 +1,21 @@
 import { LaunchStatus } from '../models';
 import { makeLaunch } from '../testing/fixtures';
-import { applyAnalyticsFilter, computeAnalytics, MIN_SAMPLE_FOR_RATE } from './analytics';
+import {
+  applyAnalyticsFilter,
+  computeAnalytics,
+  launchToRecord,
+  MIN_SAMPLE_FOR_RATE,
+} from './analytics';
 
 describe('analytics', () => {
   const at = (iso: string, status: LaunchStatus, providerId = 'a') =>
-    makeLaunch({
-      scheduledTime: iso,
-      status,
-      provider: { id: providerId, externalId: providerId, name: `Provider ${providerId}` },
-    });
+    launchToRecord(
+      makeLaunch({
+        scheduledTime: iso,
+        status,
+        provider: { id: providerId, externalId: providerId, name: `Provider ${providerId}` },
+      }),
+    );
 
   it('ignores launches without an outcome', () => {
     const summary = computeAnalytics([
@@ -62,6 +69,14 @@ describe('analytics', () => {
     expect(bigStats.successRate).toBeCloseTo(0.9);
     expect(smallStats.successRate).toBeNull();
     expect(summary.byProvider[0].providerId).toBe('big');
+  });
+
+  it('treats date-only times like full timestamps', () => {
+    const summary = computeAnalytics([
+      { ...at('1999-01-01T00:00:00Z', 'success'), time: '1999-03-04' },
+    ]);
+    expect(summary.byYear[0].key).toBe('1999');
+    expect(summary.byMonth[0].label).toBe('Mar 1999');
   });
 
   it('handles an empty dataset', () => {

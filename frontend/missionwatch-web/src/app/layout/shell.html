@@ -64,21 +64,29 @@
   }
 
   <div class="content">
-    <div class="demo-banner" role="note">
-      <mw-icon name="info" [size]="16" />
-      <span>
-        <strong>Preview build.</strong> All launches and statistics shown are demo data for layout
-        and testing, not real launch records. Live data arrives in Phase 2.
-      </span>
-    </div>
-
     <main id="main" tabindex="-1">
       <router-outlet />
     </main>
 
     <footer class="footer">
-      <span>© {{ year }} MissionWatch. Not affiliated with any launch provider or agency.</span>
-      <a routerLink="/about/data-sources">Data sources and limitations</a>
+      <p class="credits">
+        Launch data from
+        <a href="https://thespacedevs.com/llapi" target="_blank" rel="noopener noreferrer"
+          >Launch Library 2</a
+        >
+        by The Space Devs. Launch history from
+        <a href="https://planet4589.org/space/gcat" target="_blank" rel="noopener noreferrer"
+          >GCAT</a
+        >
+        by Jonathan McDowell (CC BY 4.0). Imagery from the
+        <a href="https://images.nasa.gov" target="_blank" rel="noopener noreferrer"
+          >NASA Image and Video Library</a
+        >.
+      </p>
+      <div class="footer-row">
+        <span>© {{ year }} MissionWatch. Not affiliated with any launch provider or agency.</span>
+        <a routerLink="/about/data-sources">Data sources and limitations</a>
+      </div>
     </footer>
   </div>
 </div>

@@ -10,6 +10,7 @@ Angular 22 frontend for MissionWatch. See the [root README](../../README.md) for
 
 | Command | What it does |
 |---|---|
+| `npm run data:history` | Download GCAT and write `public/data/launch-history.json` (Analytics data). Use `-- --from-dir <dir>` to build from local TSVs. |
 | `npm start` | Dev server on http://localhost:4200 |
 | `npm test -- --watch=false` | Vitest unit tests, single run |
 | `npm run build` | Production build into `dist/missionwatch-web/browser` |
@@ -29,8 +30,8 @@ src/app/
 └── features/        One lazy-loaded route per page
 ```
 
-## Swapping the data source
+## Data sources
 
-Features only inject `LAUNCH_DATA` (`core/data/launch-data-source.ts`). Phase 1 provides
-`provideMockLaunchData()` in `app.config.ts`. To use a live source, implement
-`LaunchDataSource` and change that one provider.
+`app.config.ts` provides `provideLiveLaunchData()`. It reads Launch Library 2 for launches (cached in the browser), the GCAT snapshot for analytics, and NASA imagery on mission pages. To work offline with the bundled demo dataset, swap it for `provideMockLaunchData()`. Features only inject `LAUNCH_DATA`, so any adapter that implements `LaunchDataSource` can be dropped in.
+
+Tests never hit the network. They use `HttpTestingController` or the mock adapter.

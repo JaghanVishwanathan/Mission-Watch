@@ -4,7 +4,7 @@
   <mw-page-header
     eyebrow="Historical launch analytics"
     title="Analytics"
-    subtitle="Launch cadence, provider activity and outcome distributions across completed orbital launch attempts."
+    subtitle="Launch cadence, provider activity and outcomes for every orbital launch attempt since 1957, from Jonathan McDowell's General Catalog of Artificial Space Objects."
   />
 
   <div class="filters panel" role="group" aria-label="Analytics filters">
@@ -12,7 +12,7 @@
       <span>From year</span>
       <select class="select" (change)="setYear('fromYear', selectValue($event))">
         <option value="" [selected]="!f.fromYear">Earliest</option>
-        @for (y of years; track y) {
+        @for (y of years(); track y) {
           <option [value]="y" [selected]="f.fromYear === y" [disabled]="!!f.toYear && y > f.toYear">
             {{ y }}
           </option>
@@ -23,7 +23,7 @@
       <span>To year</span>
       <select class="select" (change)="setYear('toYear', selectValue($event))">
         <option value="" [selected]="!f.toYear">Latest</option>
-        @for (y of years; track y) {
+        @for (y of years(); track y) {
           <option
             [value]="y"
             [selected]="f.toYear === y"
@@ -38,35 +38,40 @@
       <span>Provider</span>
       <select class="select" (change)="setProvider(selectValue($event))">
         <option value="" [selected]="!f.providerIds?.length">All providers</option>
-        @if (providers.hasValue()) {
-          @for (p of providers.value().data; track p.id) {
-            <option [value]="p.id" [selected]="f.providerIds?.[0] === p.id">{{ p.name }}</option>
-          }
+        @for (p of providerOptions(); track p.id) {
+          <option [value]="p.id" [selected]="f.providerIds?.[0] === p.id">
+            {{ p.name }} ({{ p.launches.toLocaleString() }})
+          </option>
         }
       </select>
     </label>
-    <button
-      type="button"
-      class="btn btn--ghost"
-      (click)="reset()"
-      [disabled]="!f.fromYear && !f.toYear && !f.providerIds?.length"
-    >
-      Reset
-    </button>
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="btn"
+        (click)="showAllTime()"
+        [disabled]="!f.fromYear && !f.toYear"
+      >
+        All time
+      </button>
+      <button type="button" class="btn btn--ghost" (click)="reset()" [disabled]="isDefaultFilter()">
+        Reset
+      </button>
+    </div>
   </div>
 
   @if (analytics.hasValue()) {
     <div class="meta-row">
-      <mw-freshness [meta]="analytics.value().meta" />
-      @for (w of analytics.value().meta.warnings; track w) {
-        <p class="warning"><mw-icon name="alert" [size]="14" /> {{ w }}</p>
+      <mw-freshness [meta]="analytics.value().meta" [staleAfterMs]="snapshotStaleAfterMs" />
+      @if (analytics.value().meta.dataTimestamp; as updated) {
+        <span class="source-date">Catalog updated {{ updated }}</span>
       }
     </div>
   }
 
   <div [attr.aria-busy]="analytics.isLoading()" class="body">
     @if (analytics.error()) {
-      <mw-error-state message="Analytics could not be computed." (retry)="analytics.reload()" />
+      <mw-error-state [message]="describeError(analytics.error())" (retry)="analytics.reload()" />
     } @else if (summary(); as s) {
       @if (s.total === 0) {
         <mw-empty-state
@@ -147,7 +152,7 @@
               id="outcomes"
               title="Outcome distribution"
               subtitle="Share of completed launches by recorded outcome"
-              footnote="A partial failure means the vehicle flew but the payload did not reach its intended orbit."
+              footnote="Partial results follow GCAT's fractional success codes: the vehicle flew but did not fully achieve the intended orbit."
               [options]="c.options"
               [height]="200"
               [columns]="[
@@ -180,6 +185,32 @@
               }
             </tbody>
           </table>
+        </section>
+
+        <section class="panel method" aria-labelledby="method-title">
+          <h2 id="method-title">About this data</h2>
+          <p>
+            Source:
+            <a href="https://planet4589.org/space/gcat" target="_blank" rel="noopener noreferrer">
+              General Catalog of Artificial Space Objects (GCAT)
+            </a>
+            by Jonathan C. McDowell, licensed
+            <a
+              href="https://creativecommons.org/licenses/by/4.0/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >CC BY 4.0</a
+            >. MissionWatch rebuilds this snapshot on every deployment and weekly.
+          </p>
+          <ul>
+            @for (n of notes(); track n) {
+              <li>{{ n }}</li>
+            }
+            <li>
+              Providers are GCAT launch agencies, which are often government or military
+              organisations rather than the commercial brand.
+            </li>
+          </ul>
         </section>
       }
     } @else {

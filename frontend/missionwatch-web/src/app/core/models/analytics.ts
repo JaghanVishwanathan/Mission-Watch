@@ -1,5 +1,16 @@
 import { LaunchStatus } from './launch';
 
+/** The minimal per-launch shape analytics needs; any source can be mapped into it. */
+export interface AnalyticsRecord {
+  time: string;
+  status: LaunchStatus;
+  providerId: string;
+  providerName: string;
+  providerAbbrev?: string;
+  siteId: string;
+  siteName: string;
+}
+
 export interface CountBucket {
   key: string;
   label: string;
@@ -31,4 +42,14 @@ export interface AnalyticsFilter {
   fromYear?: number;
   toYear?: number;
   providerIds?: string[];
+}
+
+/** What the analytics dataset can be filtered by. */
+export interface AnalyticsOptions {
+  firstYear: number;
+  lastYear: number;
+  /** Ordered by launch count, most active first. */
+  providers: { id: string; name: string; launches: number }[];
+  /** Methodology notes from the dataset, shown alongside the charts. */
+  notes: string[];
 }

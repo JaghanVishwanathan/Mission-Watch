@@ -40,6 +40,12 @@ export const STATUS_INFO: Record<LaunchStatus, StatusInfo> = {
     tone: 'info',
     icon: 'rocket',
   },
+  deployed: {
+    label: 'Payload deployed',
+    description: 'Payload has separated; the final outcome has not been recorded yet.',
+    tone: 'info',
+    icon: 'orbit',
+  },
   success: {
     label: 'Success',
     description: 'Payload reached its intended orbit.',

@@ -2,14 +2,13 @@ import { DatePipe, DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { fromEvent, map, of, startWith } from 'rxjs';
-import { LAUNCH_DATA, MIN_SAMPLE_FOR_RATE } from '../../core/data';
+import { describeError, LAUNCH_DATA, MIN_SAMPLE_FOR_RATE } from '../../core/data';
 import { AnalyticsFilter } from '../../core/models';
 import { ThemeService } from '../../core/state/theme.service';
 import { STATUS_INFO } from '../../core/util/status';
 import { EmptyState } from '../../shared/ui/empty-state';
 import { ErrorState } from '../../shared/ui/error-state';
 import { FreshnessIndicator } from '../../shared/ui/freshness-indicator';
-import { Icon } from '../../shared/ui/icon';
 import { PageHeader } from '../../shared/ui/page-header';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { StatTile } from '../../shared/ui/stat-tile';
@@ -22,7 +21,9 @@ import {
   providerVolumeOption,
 } from './chart-options';
 
-const FIRST_YEAR = 2016;
+/** Default view: the last ten calendar years. "Earliest" shows the full record since 1957. */
+const DEFAULT_SPAN_YEARS = 10;
+const DAY_MS = 86_400_000;
 const MONTHS_SHOWN = 24;
 const TOP_PROVIDERS = 8;
 
@@ -34,7 +35,6 @@ const TOP_PROVIDERS = 8;
     EmptyState,
     ErrorState,
     FreshnessIndicator,
-    Icon,
     PageHeader,
     Skeleton,
     StatTile,
@@ -49,13 +49,30 @@ export class Analytics {
   private readonly document = inject(DOCUMENT);
 
   protected readonly minSample = MIN_SAMPLE_FOR_RATE;
-  protected readonly years = Array.from(
-    { length: new Date().getFullYear() - FIRST_YEAR + 1 },
-    (_, i) => FIRST_YEAR + i,
-  );
+  protected readonly describeError = describeError;
+  /** The snapshot is rebuilt weekly, so only flag it as stale after ~8 days. */
+  protected readonly snapshotStaleAfterMs = 8 * DAY_MS;
+  private readonly defaultFilter: AnalyticsFilter = {
+    fromYear: new Date().getFullYear() - DEFAULT_SPAN_YEARS + 1,
+  };
 
-  protected readonly filter = signal<AnalyticsFilter>({});
-  protected readonly providers = rxResource({ stream: () => this.data.getProviders() });
+  protected readonly filter = signal<AnalyticsFilter>(this.defaultFilter);
+  protected readonly options = rxResource({ stream: () => this.data.getAnalyticsOptions() });
+  protected readonly years = computed(() => {
+    if (!this.options.hasValue()) return [];
+    const { firstYear, lastYear } = this.options.value().data;
+    return Array.from({ length: lastYear - firstYear + 1 }, (_, i) => lastYear - i);
+  });
+  protected readonly providerOptions = computed(() =>
+    this.options.hasValue() ? this.options.value().data.providers : [],
+  );
+  protected readonly notes = computed(() =>
+    this.options.hasValue() ? this.options.value().data.notes : [],
+  );
+  protected readonly isDefaultFilter = computed(() => {
+    const f = this.filter();
+    return f.fromYear === this.defaultFilter.fromYear && !f.toYear && !f.providerIds?.length;
+  });
   protected readonly analytics = rxResource({
     params: () => this.filter(),
     stream: ({ params }) => this.data.getAnalytics(params),
@@ -161,7 +178,11 @@ export class Analytics {
   }
 
   protected reset(): void {
-    this.filter.set({});
+    this.filter.set(this.defaultFilter);
+  }
+
+  protected showAllTime(): void {
+    this.filter.update((f) => ({ ...f, fromYear: undefined, toYear: undefined }));
   }
 
   protected selectValue(event: Event): string {

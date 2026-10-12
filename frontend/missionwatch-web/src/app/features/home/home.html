@@ -21,10 +21,7 @@
 
     <div class="next-launch">
       @if (upcoming.error()) {
-        <mw-error-state
-          message="Upcoming launches could not be loaded."
-          (retry)="upcoming.reload()"
-        />
+        <mw-error-state [message]="describeError(upcoming.error())" (retry)="upcoming.reload()" />
       } @else if (next(); as l) {
         <p class="next-label">Next launch</p>
         <mw-status-badge [status]="l.status" />
@@ -32,12 +29,13 @@
           <a [routerLink]="['/launches', l.id]">{{ l.missionName }}</a>
         </h2>
         <p class="next-sub">{{ l.provider.name }} · {{ l.rocket.name }}</p>
-        <div class="next-countdown"><mw-countdown [target]="l.scheduledTime" /></div>
+        @if (!l.timePrecision) {
+          <div class="next-countdown"><mw-countdown [target]="l.scheduledTime" /></div>
+        }
         <p class="next-when">
           <mw-icon name="calendar" [size]="14" />
-          <time [attr.datetime]="l.scheduledTime">{{
-            l.scheduledTime | date: 'EEEE d MMMM, HH:mm (zzzz)'
-          }}</time>
+          <time [attr.datetime]="l.scheduledTime">{{ nextWhen() }}</time>
+          <span class="tz">your local time</span>
         </p>
         <p class="next-when">
           <mw-icon name="pin" [size]="14" />{{ l.site.name }}, {{ l.site.location }}
@@ -45,7 +43,7 @@
       } @else if (upcoming.hasValue()) {
         <mw-empty-state
           title="No upcoming launches"
-          message="Nothing is currently scheduled in the dataset."
+          message="Launch Library 2 currently lists no upcoming launches."
           icon="calendar"
         />
       } @else {
@@ -58,16 +56,19 @@
   </section>
 
   <!-- Statistics -->
-  <section class="section" aria-labelledby="stats-title" [attr.aria-busy]="stats.isLoading()">
+  <section class="section" aria-labelledby="stats-title" [attr.aria-busy]="allTime.isLoading()">
     <div class="section-title">
       <h2 id="stats-title">Launch activity</h2>
-      @if (stats.hasValue()) {
-        <mw-freshness [meta]="stats.value().meta" />
+      @if (allTime.hasValue()) {
+        <mw-freshness [meta]="allTime.value().meta" />
       }
     </div>
-    @if (stats.error()) {
-      <mw-error-state message="Statistics are unavailable right now." (retry)="stats.reload()" />
-    } @else if (stats.hasValue()) {
+    @if (allTime.error() || thisYear.error()) {
+      <mw-error-state
+        [message]="describeError(allTime.error() ?? thisYear.error())"
+        (retry)="allTime.reload(); thisYear.reload()"
+      />
+    } @else if (statTiles().length) {
       <div class="stats">
         @for (tile of statTiles(); track tile.label) {
           <mw-stat-tile
@@ -123,7 +124,7 @@
         </a>
       </div>
       @if (recent.error()) {
-        <mw-error-state message="Recent launches could not be loaded." (retry)="recent.reload()" />
+        <mw-error-state [message]="describeError(recent.error())" (retry)="recent.reload()" />
       } @else if (recent.hasValue()) {
         <mw-freshness [meta]="recent.value().meta" />
         @for (l of recent.value().data; track l.id) {
@@ -141,12 +142,12 @@
 
   <!-- Featured -->
   <section class="section" aria-labelledby="featured-title" [attr.aria-busy]="featured.isLoading()">
-    <div class="section-title"><h2 id="featured-title">Featured missions</h2></div>
+    <div class="section-title">
+      <h2 id="featured-title">Featured missions</h2>
+      <span class="section-note">Upcoming science, crewed and exploration launches</span>
+    </div>
     @if (featured.error()) {
-      <mw-error-state
-        message="Featured missions could not be loaded."
-        (retry)="featured.reload()"
-      />
+      <mw-error-state [message]="describeError(featured.error())" (retry)="featured.reload()" />
     } @else if (featured.hasValue()) {
       <div class="grid-cards">
         @for (l of featured.value().data; track l.id) {

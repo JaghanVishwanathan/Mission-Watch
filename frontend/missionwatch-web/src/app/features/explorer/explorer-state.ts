@@ -3,7 +3,7 @@ import {
   LaunchQuery,
   LaunchSortField,
   LaunchStatus,
-  OUTCOME_STATUSES,
+  PAST_STATUSES,
   SortDirection,
   UPCOMING_STATUSES,
 } from '../../core/models';
@@ -80,8 +80,8 @@ export function filtersToParams(f: ExplorerFilters): Params {
 
 export function statusesFor(when: When): readonly LaunchStatus[] {
   if (when === 'upcoming') return UPCOMING_STATUSES;
-  if (when === 'past') return OUTCOME_STATUSES;
-  return [...UPCOMING_STATUSES, ...OUTCOME_STATUSES];
+  if (when === 'past') return PAST_STATUSES;
+  return [...UPCOMING_STATUSES, ...PAST_STATUSES];
 }
 
 export function toLaunchQuery(f: ExplorerFilters): LaunchQuery {

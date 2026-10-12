@@ -1,11 +1,7 @@
 @let f = filters();
 
 <div class="page">
-  <mw-page-header
-    eyebrow="Launch catalogue"
-    title="Launch Explorer"
-    subtitle="Search and filter upcoming and historical launches by mission, provider, rocket, status and date."
-  >
+  <mw-page-header eyebrow="Launch catalogue" title="Launch Explorer" [subtitle]="subtitle">
     <div class="view-toggle" role="group" aria-label="Result layout">
       <button
         type="button"
@@ -165,7 +161,7 @@
     </div>
 
     @if (results.error()) {
-      <mw-error-state message="Launches could not be loaded." (retry)="results.reload()" />
+      <mw-error-state [message]="describeError(results.error())" (retry)="results.reload()" />
     } @else if (shown(); as r) {
       <div [class]="f.view === 'grid' ? 'grid-cards' : 'list'" [class.dim]="results.isLoading()">
         @for (l of r.data; track l.id) {
