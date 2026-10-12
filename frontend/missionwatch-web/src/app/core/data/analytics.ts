@@ -1,5 +1,6 @@
 import {
   AnalyticsFilter,
+  AnalyticsRecord,
   AnalyticsSummary,
   CountBucket,
   Launch,
@@ -26,29 +27,45 @@ const MONTH_LABELS = [
   'Dec',
 ];
 
+export function launchToRecord(launch: Launch): AnalyticsRecord {
+  return {
+    time: launch.scheduledTime,
+    status: launch.status,
+    providerId: launch.provider.id,
+    providerName: launch.provider.name,
+    providerAbbrev: launch.provider.abbrev,
+    siteId: launch.site.id,
+    siteName: launch.site.name,
+  };
+}
+
+/** Years are read from the leading "yyyy" so date-only and full timestamps behave alike. */
+function yearOf(time: string): number {
+  return Number(time.slice(0, 4));
+}
+
 export function applyAnalyticsFilter(
-  launches: readonly Launch[],
+  records: readonly AnalyticsRecord[],
   filter: AnalyticsFilter,
-): Launch[] {
-  return launches.filter((launch) => {
-    const year = new Date(launch.scheduledTime).getUTCFullYear();
+): AnalyticsRecord[] {
+  return records.filter((r) => {
+    const year = yearOf(r.time);
     if (filter.fromYear !== undefined && year < filter.fromYear) return false;
     if (filter.toYear !== undefined && year > filter.toYear) return false;
-    if (filter.providerIds?.length && !filter.providerIds.includes(launch.provider.id))
-      return false;
+    if (filter.providerIds?.length && !filter.providerIds.includes(r.providerId)) return false;
     return true;
   });
 }
 
 function countBy(
-  launches: readonly Launch[],
-  keyOf: (l: Launch) => string,
-  labelOf: (l: Launch) => string,
+  records: readonly AnalyticsRecord[],
+  keyOf: (r: AnalyticsRecord) => string,
+  labelOf: (r: AnalyticsRecord) => string,
 ): CountBucket[] {
   const buckets = new Map<string, CountBucket>();
-  for (const launch of launches) {
-    const key = keyOf(launch);
-    const bucket = buckets.get(key) ?? { key, label: labelOf(launch), count: 0 };
+  for (const record of records) {
+    const key = keyOf(record);
+    const bucket = buckets.get(key) ?? { key, label: labelOf(record), count: 0 };
     bucket.count++;
     buckets.set(key, bucket);
   }
@@ -56,36 +73,34 @@ function countBy(
 }
 
 /** Aggregates completed launches only — upcoming launches have no outcome yet. */
-export function computeAnalytics(launches: readonly Launch[]): AnalyticsSummary {
-  const completed = launches
-    .filter((l) => OUTCOME_STATUSES.includes(l.status))
-    .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
+export function computeAnalytics(records: readonly AnalyticsRecord[]): AnalyticsSummary {
+  const completed = records
+    .filter((r) => OUTCOME_STATUSES.includes(r.status))
+    .sort((a, b) => a.time.localeCompare(b.time));
 
-  const yearOf = (l: Launch) => String(new Date(l.scheduledTime).getUTCFullYear());
-  const byYear = countBy(completed, yearOf, yearOf).sort((a, b) => a.key.localeCompare(b.key));
+  const year = (r: AnalyticsRecord) => r.time.slice(0, 4);
+  const byYear = countBy(completed, year, year).sort((a, b) => a.key.localeCompare(b.key));
 
-  const monthKey = (l: Launch) => l.scheduledTime.slice(0, 7);
-  const monthLabel = (l: Launch) => {
-    const d = new Date(l.scheduledTime);
-    return `${MONTH_LABELS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-  };
+  const monthKey = (r: AnalyticsRecord) => r.time.slice(0, 7);
+  const monthLabel = (r: AnalyticsRecord) =>
+    `${MONTH_LABELS[Number(r.time.slice(5, 7)) - 1]} ${r.time.slice(0, 4)}`;
   const byMonth = countBy(completed, monthKey, monthLabel).sort((a, b) =>
     a.key.localeCompare(b.key),
   );
 
   const providers = new Map<string, ProviderStats>();
-  for (const launch of completed) {
-    const stats = providers.get(launch.provider.id) ?? {
-      providerId: launch.provider.id,
-      name: launch.provider.name,
-      abbrev: launch.provider.abbrev,
+  for (const record of completed) {
+    const stats = providers.get(record.providerId) ?? {
+      providerId: record.providerId,
+      name: record.providerName,
+      abbrev: record.providerAbbrev,
       launches: 0,
       successes: 0,
       successRate: null,
     };
     stats.launches++;
-    if (launch.status === 'success') stats.successes++;
-    providers.set(launch.provider.id, stats);
+    if (record.status === 'success') stats.successes++;
+    providers.set(record.providerId, stats);
   }
   const byProvider = [...providers.values()]
     .map((s) => ({
@@ -96,19 +111,19 @@ export function computeAnalytics(launches: readonly Launch[]): AnalyticsSummary 
 
   const bySite = countBy(
     completed,
-    (l) => l.site.id,
-    (l) => l.site.name,
+    (r) => r.siteId,
+    (r) => r.siteName,
   ).sort((a, b) => b.count - a.count);
 
   const outcomes = OUTCOME_STATUSES.map((status: LaunchStatus) => ({
     status,
-    count: completed.filter((l) => l.status === status).length,
+    count: completed.filter((r) => r.status === status).length,
   }));
 
   return {
     total: completed.length,
-    firstLaunch: completed[0]?.scheduledTime,
-    lastLaunch: completed.at(-1)?.scheduledTime,
+    firstLaunch: completed[0]?.time,
+    lastLaunch: completed.at(-1)?.time,
     byYear,
     byMonth,
     byProvider,

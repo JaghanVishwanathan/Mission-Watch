@@ -5,10 +5,20 @@
  */
 
 export type LaunchStatus =
-  'go' | 'tbc' | 'tbd' | 'hold' | 'in-flight' | 'success' | 'partial-failure' | 'failure';
+  | 'go'
+  | 'tbc'
+  | 'tbd'
+  | 'hold'
+  | 'in-flight'
+  | 'deployed'
+  | 'success'
+  | 'partial-failure'
+  | 'failure';
 
 export const UPCOMING_STATUSES: readonly LaunchStatus[] = ['go', 'tbc', 'tbd', 'hold', 'in-flight'];
 export const OUTCOME_STATUSES: readonly LaunchStatus[] = ['success', 'partial-failure', 'failure'];
+/** Launched, with the final outcome not yet recorded (LL2 "Payload Deployed"). */
+export const PAST_STATUSES: readonly LaunchStatus[] = ['deployed', ...OUTCOME_STATUSES];
 
 export type MissionCategory =
   | 'communications'
@@ -56,7 +66,7 @@ export interface LaunchSite {
 }
 
 export interface Payload {
-  name: string;
+  name?: string;
   type?: string;
   massKg?: number;
   customer?: string;
@@ -85,6 +95,21 @@ export interface LaunchSnapshot {
   sourcedReason?: string;
 }
 
+/** A sourced, timestamped note about a launch (e.g. "Now targeting Oct 13"). */
+export interface LaunchUpdate {
+  id: string;
+  comment: string;
+  createdOn: string;
+  infoUrl?: string;
+  author?: string;
+}
+
+export interface MediaCredit {
+  credit?: string;
+  license?: string;
+  licenseUrl?: string;
+}
+
 export interface SourceLink {
   label: string;
   url: string;
@@ -99,7 +124,12 @@ export interface Launch {
   description?: string;
   objectives?: string[];
   category?: MissionCategory;
+  /** Source wording for the mission type, e.g. 'Planetary Science'. */
+  missionType?: string;
+  /** NET (no earlier than) time. Read together with timePrecision. */
   scheduledTime: string;
+  /** Source precision label ('Second', 'Day', 'Month'…). Absent means exact. */
+  timePrecision?: string;
   windowStart?: string;
   windowEnd?: string;
   status: LaunchStatus;
@@ -108,12 +138,16 @@ export interface Launch {
   site: LaunchSite;
   payload?: Payload;
   imageUrl?: string;
-  imageCredit?: string;
+  thumbnailUrl?: string;
+  imageCredit?: MediaCredit;
   links?: SourceLink[];
   milestones?: MissionMilestone[];
   scheduleHistory?: LaunchSnapshot[];
+  updates?: LaunchUpdate[];
   featured?: boolean;
   lastUpdated: string;
+  /** Which source record shape produced this object. */
+  detailLevel?: 'summary' | 'full';
 }
 
 /** Provenance that travels with every payload (SRS §5.7, §8.2). */
@@ -124,6 +158,9 @@ export interface DataMeta {
   warnings: string[];
   /** True while the app runs on bundled demo data instead of a live source. */
   isMock: boolean;
+  /** True when a refresh failed and previously cached data is being shown instead. */
+  stale?: boolean;
+  sourceUrl?: string;
 }
 
 export interface DataResponse<T> {

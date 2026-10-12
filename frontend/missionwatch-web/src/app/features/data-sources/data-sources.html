@@ -8,12 +8,18 @@
   <section class="panel callout" aria-labelledby="current-title">
     <mw-icon name="info" [size]="22" />
     <div>
-      <h2 id="current-title">Current status: demo data</h2>
+      <h2 id="current-title">How live data reaches this page</h2>
       <p>
-        This preview build runs entirely on a bundled demo dataset. Mission names, providers,
-        vehicles and sites refer to real organisations so the layouts can be judged realistically.
-        The specific launches, schedules, outcomes and historical statistics are illustrative, and
-        the historical series is synthetic. Live data integration begins in Phase 2.
+        Your browser requests launch data directly from Launch Library 2. It asks for the next
+        {{ listLimit }} scheduled launches and the {{ listLimit }} most recent ones, and keeps a
+        copy for {{ listTtl }} minutes so that the free request limit lasts. Mission pages request
+        the full record and keep it for {{ detailTtl }} minutes. Search and filters run on that
+        saved copy. If a refresh fails or the limit is reached, MissionWatch shows the saved copy
+        and labels it, rather than showing nothing.
+      </p>
+      <p>
+        Historical statistics come from a snapshot of GCAT that is built when the site is deployed,
+        so the Analytics page never depends on a rate-limited service.
       </p>
     </div>
   </section>
@@ -24,22 +30,23 @@
       <div class="panel kind">
         <h3><mw-icon name="database" [size]="16" /> Measured</h3>
         <p>
-          Values reported by a source, such as scheduled times, statuses and outcomes. Each one
-          keeps the source's identifier.
+          Values reported by a source, such as scheduled times, statuses, outcomes, mission
+          timelines and launch updates. Each record keeps its source identifier.
         </p>
       </div>
       <div class="panel kind">
         <h3><mw-icon name="layers" [size]="16" /> Derived</h3>
         <p>
-          Values computed by MissionWatch from measured data, such as launch counts, success shares
-          and schedule shifts between snapshots.
+          Values MissionWatch calculates from measured data, such as launch counts, success shares
+          and the "featured" selection on the dashboard.
         </p>
       </div>
       <div class="panel kind">
-        <h3><mw-icon name="clock" [size]="16" /> Estimated or illustrative</h3>
+        <h3><mw-icon name="clock" [size]="16" /> Estimated or approximate</h3>
         <p>
-          Generic milestone timings, illustrative trajectories and any model output. These are
-          always labelled, and they are never presented as mission-specific fact.
+          Dates that the source gives only to the day, month or quarter are shown at that precision,
+          without a countdown. Keyword-matched imagery and any future model output are always
+          labelled.
         </p>
       </div>
     </div>
@@ -55,6 +62,7 @@
             <th scope="col">Used for</th>
             <th scope="col">Refresh</th>
             <th scope="col">Status</th>
+            <th scope="col">Licence and attribution</th>
             <th scope="col">Known limitations</th>
           </tr>
         </thead>
@@ -69,13 +77,49 @@
               <td>{{ s.use }}</td>
               <td>{{ s.refresh }}</td>
               <td>
-                <span class="tag">{{ s.status }}</span>
+                <span
+                  class="tag"
+                  [class.tag--live]="s.status === 'Live' || s.status === 'Snapshot'"
+                  >{{ s.status }}</span
+                >
               </td>
+              <td>{{ s.license }}</td>
               <td>{{ s.limitations }}</td>
             </tr>
           }
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="mapping-title">
+    <h2 id="mapping-title" class="section-title">How source data is interpreted</h2>
+    <div class="panel prose">
+      <ul>
+        <li>
+          Launch Library 2 statuses map to MissionWatch statuses one to one. "Payload Deployed"
+          stays a separate status and is not counted as a success until the source records an
+          outcome.
+        </li>
+        <li>
+          GCAT launch categories O (orbital) and D (deep space) count as orbital launch attempts.
+          Pad explosions and pad aborts are excluded because no launch took place.
+        </li>
+        <li>
+          GCAT's fractional success codes (for example OS80 or OF40) are shown as partial failures.
+          A few subsidiary agency codes are merged: Chinese CASC institutes into CASC, and both ULA
+          codes into ULA.
+        </li>
+        <li>
+          Launch Library 2 and GCAT name providers differently, so dashboard statistics (GCAT) and
+          launch lists (Launch Library 2) are not joined record by record.
+        </li>
+        <li>
+          Schedule-change history needs snapshots recorded over time. That starts with the backend
+          data pipeline (Phase 5). Until then, mission pages show the sourced launch updates
+          instead.
+        </li>
+      </ul>
     </div>
   </section>
 

@@ -1,256 +1,405 @@
-<div class="page" [attr.aria-busy]="launch.isLoading()">
-  <a routerLink="/launches" class="back"
-    ><mw-icon name="arrow-left" [size]="16" /> Back to Launch Explorer</a
-  >
-
+<div class="detail" [attr.aria-busy]="launch.isLoading()">
   @if (launch.error()) {
-    <mw-error-state message="This mission could not be loaded." (retry)="launch.reload()" />
+    <div class="page">
+      <a routerLink="/launches" class="back"
+        ><mw-icon name="arrow-left" [size]="16" /> All launches</a
+      >
+      <mw-error-state [message]="describeError(launch.error())" (retry)="launch.reload()" />
+    </div>
   } @else if (launch.hasValue() && l() === null) {
-    <mw-empty-state
-      title="Mission not found"
-      message="No launch with this identifier exists in the current dataset."
-      icon="rocket"
-    >
-      <a routerLink="/launches" class="btn">Browse all launches</a>
-    </mw-empty-state>
+    <div class="page">
+      <a routerLink="/launches" class="back"
+        ><mw-icon name="arrow-left" [size]="16" /> All launches</a
+      >
+      <mw-empty-state
+        title="Mission not found"
+        message="Launch Library 2 has no launch with this identifier. It may have been removed or merged."
+        icon="rocket"
+      >
+        <a routerLink="/launches" class="btn">Browse launches</a>
+      </mw-empty-state>
+    </div>
   } @else if (l(); as l) {
-    <!-- Header -->
-    <header class="hero" [attr.data-category]="l.category ?? 'unknown'">
-      <div class="hero-main">
-        <div class="hero-badges">
-          <mw-status-badge [status]="l.status" />
-          @if (category(); as c) {
-            <span class="tag">{{ c }}</span>
-          }
-        </div>
-        <h1>{{ l.missionName }}</h1>
-        <p class="hero-sub">{{ l.provider.name }} · {{ l.rocket.name }} · {{ l.site.name }}</p>
-        <mw-freshness [meta]="meta()!" />
-      </div>
-      <div class="hero-time">
-        @if (isUpcoming()) {
-          <p class="label">Scheduled liftoff</p>
-          <div class="countdown"><mw-countdown [target]="l.scheduledTime" /></div>
-        } @else {
-          <p class="label">Launched</p>
-        }
-        <time [attr.datetime]="l.scheduledTime" class="when">{{
-          l.scheduledTime | date: 'EEE d MMM y, HH:mm (zzzz)'
-        }}</time>
-        <span class="utc mono">{{ l.scheduledTime | date: 'yyyy-MM-dd HH:mm' : 'UTC' }} UTC</span>
-      </div>
-    </header>
-
-    @if (meta()!.warnings.length) {
-      <ul class="warnings" role="note">
-        @for (w of meta()!.warnings; track w) {
-          <li><mw-icon name="info" [size]="14" /> {{ w }}</li>
-        }
-      </ul>
-    }
-
-    <div class="layout">
-      <div class="main-col">
-        <!-- Overview -->
-        <section class="panel" aria-labelledby="overview-title">
-          <h2 id="overview-title">Mission overview</h2>
-          @if (l.description) {
-            <p class="description">{{ l.description }}</p>
-          } @else {
-            <p class="unavailable">No mission description is available.</p>
-          }
-          <h3>Objectives</h3>
-          @if (l.objectives?.length) {
-            <ul class="objectives">
-              @for (o of l.objectives; track o) {
-                <li>{{ o }}</li>
+    <header class="hero">
+      @if (l.imageUrl && !heroImageFailed()) {
+        <img
+          class="hero-image"
+          [src]="l.imageUrl"
+          alt=""
+          referrerpolicy="no-referrer"
+          (error)="heroImageFailed.set(true)"
+        />
+      }
+      <div class="hero-scrim" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <a routerLink="/launches" class="back"
+          ><mw-icon name="arrow-left" [size]="16" /> All launches</a
+        >
+        <div class="hero-grid">
+          <div class="hero-main">
+            <p class="overline hero-overline">
+              <span>{{ l.provider.name }}</span>
+              @if (category(); as c) {
+                <span aria-hidden="true">/</span>
+                <span>{{ c }}</span>
               }
-            </ul>
-          } @else {
-            <p class="unavailable">Mission objectives are unavailable.</p>
-          }
-        </section>
-
-        <!-- Milestones -->
-        <section class="panel" aria-labelledby="milestones-title">
-          <div class="panel-head">
-            <h2 id="milestones-title">Mission milestones</h2>
-            @if (anyEstimated()) {
-              <span class="tag tag--warn"
-                ><mw-icon name="clock" [size]="12" /> Estimated timings</span
+            </p>
+            <h1>{{ l.missionName }}</h1>
+            <p class="hero-sub">{{ l.rocket.name }} · {{ l.site.name }}, {{ l.site.location }}</p>
+            <div class="hero-meta">
+              <mw-status-badge [status]="l.status" />
+              <mw-freshness [meta]="meta()!" [showWarnings]="false" />
+            </div>
+          </div>
+          <div class="hero-time">
+            @if (isUpcoming()) {
+              <p class="overline">{{ l.timePrecision ? 'No earlier than' : 'Liftoff in' }}</p>
+              @if (!l.timePrecision) {
+                <mw-countdown [target]="l.scheduledTime" [display]="true" />
+              }
+            } @else {
+              <p class="overline">Launched</p>
+            }
+            <time [attr.datetime]="l.scheduledTime" class="when">{{ when() }}</time>
+            @if (precision(); as p) {
+              <span class="utc">{{ p }}</span>
+            } @else {
+              <span class="utc mono"
+                >{{ l.scheduledTime | date: 'yyyy-MM-dd HH:mm' : 'UTC' }} UTC</span
               >
             }
           </div>
-          @if (l.milestones?.length) {
-            @if (anyEstimated()) {
+        </div>
+      </div>
+      @if (l.imageUrl && !heroImageFailed() && (l.imageCredit?.credit || l.imageCredit?.license)) {
+        <p class="credit">
+          Image: {{ l.imageCredit?.credit ?? 'Unknown' }}
+          @if (l.imageCredit?.license) {
+            ·
+            @if (l.imageCredit?.licenseUrl) {
+              <a [href]="l.imageCredit!.licenseUrl" target="_blank" rel="noopener noreferrer">{{
+                l.imageCredit!.license
+              }}</a>
+            } @else {
+              {{ l.imageCredit!.license }}
+            }
+          }
+        </p>
+      }
+    </header>
+
+    <div class="page body">
+      @if (meta()!.warnings.length) {
+        <ul class="warnings" role="status">
+          @for (w of meta()!.warnings; track w) {
+            <li><mw-icon name="info" [size]="14" /> {{ w }}</li>
+          }
+        </ul>
+      }
+
+      <div class="layout">
+        <div class="main-col">
+          <!-- Overview -->
+          <section class="panel" aria-labelledby="overview-title">
+            <h2 id="overview-title">Mission overview</h2>
+            @if (l.description) {
+              <p class="description">{{ l.description }}</p>
+            } @else {
+              <p class="unavailable">No mission description is available.</p>
+            }
+            @if (l.objectives?.length) {
+              <h3>Objectives</h3>
+              <ul class="objectives">
+                @for (o of l.objectives; track o) {
+                  <li>{{ o }}</li>
+                }
+              </ul>
+            }
+          </section>
+
+          <!-- Milestones -->
+          <section class="panel" aria-labelledby="milestones-title">
+            <div class="panel-head">
+              <h2 id="milestones-title">Mission timeline</h2>
+              @if (anyEstimated()) {
+                <span class="tag tag--warn"
+                  ><mw-icon name="clock" [size]="12" /> Estimated timings</span
+                >
+              } @else if (l.milestones?.length) {
+                <span class="tag">Source: {{ l.milestones![0].source ?? 'provider' }}</span>
+              }
+            </div>
+            @if (l.milestones?.length) {
+              @if (anyEstimated()) {
+                <p class="note">
+                  Timings marked as estimated come from a generic vehicle profile, not
+                  mission-specific data.
+                </p>
+              } @else {
+                <p class="note">
+                  Planned event times relative to liftoff (T-0), as published for this mission.
+                </p>
+              }
+              <ol class="timeline">
+                @for (m of l.milestones; track m.id) {
+                  <li [class.liftoff]="m.offsetSeconds === 0">
+                    <span class="offset mono">{{
+                      m.offsetSeconds !== undefined ? formatOffset(m.offsetSeconds) : 'Time unknown'
+                    }}</span>
+                    <div>
+                      <p class="m-name">
+                        {{ m.name }}
+                        @if (m.estimated) {
+                          <span class="visually-hidden">(estimated)</span>
+                        }
+                      </p>
+                      @if (m.description) {
+                        <p class="m-desc">{{ m.description }}</p>
+                      }
+                    </div>
+                  </li>
+                }
+              </ol>
+            } @else if (l.detailLevel === 'summary' && launch.isLoading()) {
+              <mw-skeleton height="120px" />
+            } @else {
+              <p class="unavailable">No timeline has been published for this mission.</p>
+            }
+          </section>
+
+          <!-- Updates -->
+          <section class="panel" aria-labelledby="updates-title">
+            <h2 id="updates-title">Launch updates</h2>
+            @if (l.updates?.length) {
+              <p class="note">Sourced notes about this launch, newest first.</p>
+              <ol class="updates">
+                @for (u of l.updates; track u.id) {
+                  <li>
+                    <time [attr.datetime]="u.createdOn">{{
+                      u.createdOn | date: 'd MMM y, HH:mm'
+                    }}</time>
+                    <p>{{ u.comment }}</p>
+                    @if (u.infoUrl) {
+                      <a [href]="u.infoUrl" target="_blank" rel="noopener noreferrer">
+                        Source <mw-icon name="external" [size]="12" />
+                        <span class="visually-hidden">(opens in a new tab)</span>
+                      </a>
+                    }
+                  </li>
+                }
+              </ol>
+            } @else if (l.detailLevel === 'summary' && launch.isLoading()) {
+              <mw-skeleton height="80px" />
+            } @else {
+              <p class="unavailable">No updates have been posted for this launch.</p>
+            }
+          </section>
+
+          <!-- Schedule history -->
+          <section class="panel" aria-labelledby="history-title">
+            <h2 id="history-title">Schedule history</h2>
+            @if (changes().length) {
               <p class="note">
-                Timings marked as estimated come from a generic vehicle profile, not
-                mission-specific data.
+                Observed schedule snapshots, oldest first. A change of date is not attributed to any
+                cause unless a reliable source states one.
+              </p>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Observed</th>
+                      <th scope="col">Scheduled for</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" class="num">Shift</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (c of changes(); track c.observedAt) {
+                      <tr>
+                        <td>
+                          {{ c.observedAt | date: 'd MMM y' }}
+                          @if (c.isOriginal) {
+                            <span class="tag">Original</span>
+                          }
+                          @if (c.isLatest) {
+                            <span class="tag tag--accent">Latest</span>
+                          }
+                        </td>
+                        <td>{{ c.scheduledTime | date: 'd MMM y, HH:mm' }}</td>
+                        <td><mw-status-badge [status]="c.status" /></td>
+                        <td class="num mono">{{ formatShift(c.deltaMs) }}</td>
+                      </tr>
+                      @if (c.sourcedReason) {
+                        <tr class="reason">
+                          <td colspan="4">
+                            <mw-icon name="info" [size]="14" /> {{ c.sourcedReason }}
+                            <em>Source: {{ c.source }}</em>
+                          </td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="unavailable">
+                No schedule snapshots are available yet. MissionWatch will start recording how this
+                launch's date changes once its data pipeline is running (Phase 5). Until then, the
+                launch updates above are the best record.
               </p>
             }
-            <ol class="timeline">
-              @for (m of l.milestones; track m.id) {
-                <li [class.liftoff]="m.offsetSeconds === 0">
-                  <span class="offset mono">{{
-                    m.offsetSeconds !== undefined ? formatOffset(m.offsetSeconds) : 'Time unknown'
-                  }}</span>
-                  <div>
-                    <p class="m-name">
-                      {{ m.name }}
-                      @if (m.estimated) {
-                        <span class="visually-hidden">(estimated)</span>
-                      }
-                    </p>
-                    @if (m.description) {
-                      <p class="m-desc">{{ m.description }}</p>
-                    }
-                  </div>
-                </li>
-              }
-            </ol>
-          } @else {
-            <p class="unavailable">No milestone information is available for this mission.</p>
-          }
-        </section>
+          </section>
 
-        <!-- Schedule history -->
-        <section class="panel" aria-labelledby="history-title">
-          <h2 id="history-title">Schedule history</h2>
-          @if (changes().length) {
-            <p class="note">
-              Observed schedule snapshots, oldest first. A change of date is not attributed to any
-              cause unless a reliable source states one.
-            </p>
-            <div class="table-wrap">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Observed</th>
-                    <th scope="col">Scheduled for</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="num">Shift</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (c of changes(); track c.observedAt) {
-                    <tr>
-                      <td>
-                        {{ c.observedAt | date: 'd MMM y' }}
-                        @if (c.isOriginal) {
-                          <span class="tag">Original</span>
-                        }
-                        @if (c.isLatest) {
-                          <span class="tag tag--accent">Latest</span>
-                        }
-                      </td>
-                      <td>{{ c.scheduledTime | date: 'd MMM y, HH:mm' }}</td>
-                      <td><mw-status-badge [status]="c.status" /></td>
-                      <td class="num mono">{{ formatShift(c.deltaMs) }}</td>
-                    </tr>
-                    @if (c.sourcedReason) {
-                      <tr class="reason">
-                        <td colspan="4">
-                          <mw-icon name="info" [size]="14" /> {{ c.sourcedReason }}
-                          <em>Source: {{ c.source }}</em>
-                        </td>
-                      </tr>
-                    }
-                  }
-                </tbody>
-              </table>
+          <!-- Related imagery -->
+          <section
+            class="panel"
+            aria-labelledby="media-title"
+            [attr.aria-busy]="related.isLoading()"
+          >
+            <div class="panel-head">
+              <h2 id="media-title">Related NASA imagery</h2>
+              @if (related.hasValue() && related.value().data.matchedQuery) {
+                <span class="tag">Keyword: “{{ related.value().data.matchedQuery }}”</span>
+              }
             </div>
-          } @else {
-            <p class="unavailable">No schedule snapshots have been recorded for this launch yet.</p>
-          }
-        </section>
-      </div>
-
-      <aside class="side-col">
-        <!-- Key facts -->
-        <section class="panel" aria-labelledby="facts-title">
-          <h2 id="facts-title">Launch details</h2>
-          <dl class="facts">
-            <div mw-field label="Provider" [value]="l.provider.name"></div>
-            <div mw-field label="Rocket" [value]="l.rocket.name"></div>
-            <div mw-field label="Launch site" [value]="l.site.name"></div>
-            <div mw-field label="Location" [value]="l.site.location"></div>
-            <div mw-field label="Coordinates" [value]="coordinates()"></div>
-            <div
-              mw-field
-              label="Launch window"
-              [value]="
-                l.windowStart && l.windowEnd
-                  ? (l.windowStart | date: 'HH:mm') + ' – ' + (l.windowEnd | date: 'HH:mm')
-                  : undefined
-              "
-            ></div>
-          </dl>
-        </section>
-
-        <section class="panel" aria-labelledby="payload-title">
-          <h2 id="payload-title">Payload and destination</h2>
-          <dl class="facts">
-            <div mw-field label="Payload" [value]="l.payload?.name"></div>
-            <div mw-field label="Type" [value]="l.payload?.type"></div>
-            <div mw-field label="Orbit" [value]="l.payload?.orbit"></div>
-            <div mw-field label="Destination" [value]="l.payload?.destination"></div>
-            <div mw-field label="Mass" [value]="withUnit(l.payload?.massKg, 'kg')"></div>
-            <div mw-field label="Customer" [value]="l.payload?.customer"></div>
-          </dl>
-        </section>
-
-        <section class="panel" aria-labelledby="rocket-title">
-          <h2 id="rocket-title">{{ l.rocket.name }}</h2>
-          <dl class="facts">
-            <div mw-field label="Family" [value]="l.rocket.family"></div>
-            <div mw-field label="Height" [value]="withUnit(l.rocket.specs?.heightM, 'm')"></div>
-            <div mw-field label="Diameter" [value]="withUnit(l.rocket.specs?.diameterM, 'm')"></div>
-            <div
-              mw-field
-              label="LEO capacity"
-              [value]="withUnit(l.rocket.specs?.leoCapacityKg, 'kg')"
-            ></div>
-            <div mw-field label="Stages" [value]="l.rocket.specs?.stages"></div>
-            <div
-              mw-field
-              label="Reusable first stage"
-              [value]="yesNo(l.rocket.specs?.reusable)"
-            ></div>
-          </dl>
-        </section>
-
-        <section class="panel" aria-labelledby="risk-title">
-          <h2 id="risk-title">Postponement risk</h2>
-          <p class="unavailable">
-            <mw-icon name="spark" [size]="14" /> No prediction available. A model will only be shown
-            once it has been evaluated on chronologically later data.
-          </p>
-        </section>
-
-        <section class="panel" aria-labelledby="links-title">
-          <h2 id="links-title">Sources and media</h2>
-          @if (l.links?.length) {
-            <ul class="links">
-              @for (link of l.links; track link.url) {
-                <li>
-                  <a [href]="link.url" target="_blank" rel="noopener noreferrer">
-                    {{ link.label }} <mw-icon name="external" [size]="14" />
-                    <span class="visually-hidden">(opens in a new tab)</span>
-                  </a>
-                </li>
+            @if (related.hasValue()) {
+              @let media = related.value();
+              @if (media.data.items.length) {
+                <p class="note">
+                  Matched by keyword from the NASA Image and Video Library. These images may show
+                  related vehicles or earlier missions rather than this exact launch.
+                </p>
+                <ul class="gallery">
+                  @for (item of media.data.items; track item.id) {
+                    <li>
+                      <a [href]="item.detailsUrl" target="_blank" rel="noopener noreferrer">
+                        <img
+                          [src]="item.thumbnailUrl"
+                          [alt]="item.title"
+                          loading="lazy"
+                          decoding="async"
+                          (error)="hideBrokenImage($event)"
+                        />
+                        <span class="caption">{{ item.title }}</span>
+                        <span class="caption-credit"
+                          >{{ item.credit
+                          }}{{ item.dateCreated ? ', ' + item.dateCreated.slice(0, 4) : '' }}</span
+                        >
+                      </a>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="unavailable">
+                  <mw-icon name="image" [size]="14" /> No related imagery was found.
+                </p>
+                @for (w of media.meta.warnings; track w) {
+                  <p class="note">{{ w }}</p>
+                }
               }
-            </ul>
-          } @else {
-            <p class="unavailable">No official source links are available.</p>
-          }
-          <p class="unavailable">
-            <mw-icon name="image" [size]="14" /> Mission imagery is unavailable.
-          </p>
-        </section>
-      </aside>
+            } @else if (related.error()) {
+              <p class="unavailable">
+                <mw-icon name="image" [size]="14" /> Imagery is unavailable right now.
+              </p>
+            } @else {
+              <div class="gallery-loading">
+                @for (i of [1, 2, 3]; track i) {
+                  <mw-skeleton height="120px" />
+                }
+              </div>
+            }
+          </section>
+        </div>
+
+        <aside class="side-col">
+          <!-- Key facts -->
+          <section class="panel" aria-labelledby="facts-title">
+            <h2 id="facts-title">Launch details</h2>
+            <dl class="facts">
+              <div mw-field label="Provider" [value]="l.provider.name"></div>
+              <div mw-field label="Rocket" [value]="l.rocket.name"></div>
+              <div mw-field label="Launch site" [value]="l.site.name"></div>
+              <div mw-field label="Location" [value]="l.site.location"></div>
+              <div mw-field label="Coordinates" [value]="coordinates()"></div>
+              <div mw-field label="Launch window" [value]="window()"></div>
+            </dl>
+          </section>
+
+          <section class="panel" aria-labelledby="payload-title">
+            <h2 id="payload-title">Mission and destination</h2>
+            <dl class="facts">
+              <div mw-field label="Mission type" [value]="l.missionType"></div>
+              <div mw-field label="Orbit" [value]="l.payload?.orbit"></div>
+              <div mw-field label="Destination" [value]="l.payload?.destination"></div>
+              <div mw-field label="Customer" [value]="l.payload?.customer"></div>
+            </dl>
+          </section>
+
+          <section class="panel" aria-labelledby="rocket-title">
+            <h2 id="rocket-title">{{ l.rocket.name }}</h2>
+            @if (l.detailLevel === 'summary' && launch.isLoading()) {
+              <mw-skeleton height="140px" />
+            } @else {
+              <dl class="facts">
+                <div mw-field label="Family" [value]="l.rocket.family"></div>
+                <div mw-field label="Length" [value]="withUnit(l.rocket.specs?.heightM, 'm')"></div>
+                <div
+                  mw-field
+                  label="Diameter"
+                  [value]="withUnit(l.rocket.specs?.diameterM, 'm')"
+                ></div>
+                <div
+                  mw-field
+                  label="LEO capacity"
+                  [value]="withUnit(l.rocket.specs?.leoCapacityKg, 'kg')"
+                ></div>
+                <div mw-field label="Stages" [value]="l.rocket.specs?.stages"></div>
+                <div mw-field label="Reusable" [value]="yesNo(l.rocket.specs?.reusable)"></div>
+              </dl>
+            }
+          </section>
+
+          <section class="panel" aria-labelledby="risk-title">
+            <h2 id="risk-title">Postponement risk</h2>
+            <p class="unavailable">
+              <mw-icon name="spark" [size]="14" /> No prediction available. A model will only be
+              shown once it has been evaluated on chronologically later data.
+            </p>
+          </section>
+
+          <section class="panel" aria-labelledby="links-title">
+            <h2 id="links-title">Sources and webcasts</h2>
+            @if (officialLinks().length || webcasts().length) {
+              <ul class="links">
+                @for (link of officialLinks(); track link.url) {
+                  <li>
+                    <a [href]="link.url" target="_blank" rel="noopener noreferrer">
+                      <mw-icon [name]="link.kind === 'data' ? 'orbit' : 'external'" [size]="14" />
+                      {{ link.label }}
+                      <span class="visually-hidden">(opens in a new tab)</span>
+                    </a>
+                  </li>
+                }
+                @for (link of webcasts(); track link.url) {
+                  <li>
+                    <a [href]="link.url" target="_blank" rel="noopener noreferrer">
+                      <mw-icon name="image" [size]="14" /> Webcast: {{ link.label }}
+                      <span class="visually-hidden">(opens in a new tab)</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            } @else if (l.detailLevel === 'summary' && launch.isLoading()) {
+              <mw-skeleton height="60px" />
+            } @else {
+              <p class="unavailable">No official source links are available.</p>
+            }
+          </section>
+        </aside>
+      </div>
     </div>
   } @else {
-    <div class="loading">
+    <div class="page loading">
       <mw-skeleton height="180px" />
       <div class="layout">
         <div class="main-col">

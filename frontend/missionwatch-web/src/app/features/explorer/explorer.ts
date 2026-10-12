@@ -11,7 +11,8 @@ import {
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { LAUNCH_DATA } from '../../core/data';
+import { describeError, LAUNCH_DATA } from '../../core/data';
+import { LL2_LIST_LIMIT } from '../../core/config';
 import {
   DataResponse,
   Launch,
@@ -82,6 +83,8 @@ export class Explorer {
   );
 
   protected readonly sortOptions = SORT_OPTIONS;
+  protected readonly describeError = describeError;
+  protected readonly subtitle = `Search and filter the next ${LL2_LIST_LIMIT} scheduled launches and the ${LL2_LIST_LIMIT} most recent ones by mission, provider, rocket, status and date. Full launch history is on the Analytics page.`;
   protected readonly statusOptions = computed(() =>
     statusesFor(this.filters().when).map((s) => ({ value: s, label: STATUS_INFO[s].label })),
   );

@@ -1,163 +1,178 @@
-<div class="page">
-  <!-- Hero: next launch -->
-  <section class="hero" aria-labelledby="hero-title" [attr.aria-busy]="upcoming.isLoading()">
-    <div class="hero-text">
-      <p class="eyebrow">Space mission intelligence</p>
-      <h1 id="hero-title">Follow every launch, understand every mission.</h1>
-      <p class="lede">
-        Explore upcoming and historical launches, see how schedules change over time and dig into
-        evidence-based launch analytics.
-      </p>
-      <div class="hero-actions">
-        <a routerLink="/launches" class="btn btn--primary"
-          ><mw-icon name="compass" [size]="16" /> Explore launches</a
-        >
-        <a routerLink="/globe" class="btn"><mw-icon name="globe" [size]="16" /> Mission globe</a>
-        <a routerLink="/analytics" class="btn btn--ghost"
-          ><mw-icon name="chart" [size]="16" /> Analytics</a
-        >
-      </div>
-    </div>
-
-    <div class="next-launch">
-      @if (upcoming.error()) {
-        <mw-error-state
-          message="Upcoming launches could not be loaded."
-          (retry)="upcoming.reload()"
-        />
-      } @else if (next(); as l) {
-        <p class="next-label">Next launch</p>
-        <mw-status-badge [status]="l.status" />
-        <h2 class="next-title">
-          <a [routerLink]="['/launches', l.id]">{{ l.missionName }}</a>
-        </h2>
-        <p class="next-sub">{{ l.provider.name }} · {{ l.rocket.name }}</p>
-        <div class="next-countdown"><mw-countdown [target]="l.scheduledTime" /></div>
-        <p class="next-when">
-          <mw-icon name="calendar" [size]="14" />
-          <time [attr.datetime]="l.scheduledTime">{{
-            l.scheduledTime | date: 'EEEE d MMMM, HH:mm (zzzz)'
-          }}</time>
-        </p>
-        <p class="next-when">
-          <mw-icon name="pin" [size]="14" />{{ l.site.name }}, {{ l.site.location }}
-        </p>
-      } @else if (upcoming.hasValue()) {
-        <mw-empty-state
-          title="No upcoming launches"
-          message="Nothing is currently scheduled in the dataset."
-          icon="calendar"
-        />
-      } @else {
-        <mw-skeleton width="40%" height="14px" />
-        <mw-skeleton width="80%" height="28px" />
-        <mw-skeleton width="60%" />
-        <mw-skeleton width="70%" height="36px" />
-      }
-    </div>
-  </section>
-
-  <!-- Statistics -->
-  <section class="section" aria-labelledby="stats-title" [attr.aria-busy]="stats.isLoading()">
-    <div class="section-title">
-      <h2 id="stats-title">Launch activity</h2>
-      @if (stats.hasValue()) {
-        <mw-freshness [meta]="stats.value().meta" />
-      }
-    </div>
-    @if (stats.error()) {
-      <mw-error-state message="Statistics are unavailable right now." (retry)="stats.reload()" />
-    } @else if (stats.hasValue()) {
-      <div class="stats">
-        @for (tile of statTiles(); track tile.label) {
-          <mw-stat-tile
-            [label]="tile.label"
-            [value]="tile.value"
-            [hint]="tile.hint"
-            [icon]="tile.icon"
-          />
-        }
-      </div>
-    } @else {
-      <div class="stats">
-        @for (i of [1, 2, 3, 4]; track i) {
-          <mw-skeleton height="104px" />
-        }
-      </div>
+<!-- ── Hero: the next launch, full screen ─────────────────────────────────── -->
+<section class="hero" aria-labelledby="hero-title" [attr.aria-busy]="upcoming.isLoading()">
+  @if (next(); as l) {
+    @if (l.imageUrl && !heroImageFailed()) {
+      <img
+        class="hero-image"
+        [src]="l.imageUrl"
+        alt=""
+        referrerpolicy="no-referrer"
+        fetchpriority="high"
+        (error)="heroImageFailed.set(true)"
+      />
     }
-  </section>
+  }
+  <div class="hero-scrim" aria-hidden="true"></div>
 
-  <div class="columns">
-    <!-- Upcoming list -->
-    <section
-      class="section"
-      aria-labelledby="upcoming-title"
-      [attr.aria-busy]="upcoming.isLoading()"
-    >
-      <div class="section-title">
-        <h2 id="upcoming-title">Upcoming</h2>
-        <a routerLink="/launches" [queryParams]="{ when: 'upcoming' }" class="more">
-          View all <mw-icon name="arrow-right" [size]="14" />
-        </a>
+  <div class="hero-content">
+    @if (upcoming.error()) {
+      <p class="overline">Next launch</p>
+      <h1 id="hero-title" class="hero-title">Launch data unavailable</h1>
+      <p class="hero-sub">{{ describeError(upcoming.error()) }}</p>
+      <div class="hero-actions">
+        <button type="button" class="btn btn--primary" (click)="upcoming.reload()">
+          Try again
+        </button>
       </div>
-      @if (upcoming.hasValue()) {
-        <mw-freshness [meta]="upcoming.value().meta" />
+    } @else if (next(); as l) {
+      <p class="overline hero-overline">
+        <span>Next launch</span>
+        <span aria-hidden="true">/</span>
+        <span>{{ l.provider.name }}</span>
+      </p>
+      <h1 id="hero-title" class="hero-title">{{ l.missionName }}</h1>
+      <p class="hero-sub">{{ l.rocket.name }} · {{ l.site.location }}</p>
+
+      <div class="hero-time">
+        @if (!l.timePrecision) {
+          <mw-countdown [target]="l.scheduledTime" [display]="true" />
+        } @else {
+          <p class="net">
+            <span class="overline">No earlier than</span>
+            <span class="net-value">{{ nextWhen() }}</span>
+          </p>
+        }
+        <p class="hero-meta">
+          <mw-status-badge [status]="l.status" />
+          @if (!l.timePrecision) {
+            <time [attr.datetime]="l.scheduledTime">{{ nextWhen() }}, your local time</time>
+          }
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <a class="btn btn--primary" [routerLink]="['/launches', l.id]">Mission details</a>
+        <a class="btn" routerLink="/launches" [queryParams]="{ when: 'upcoming' }">All launches</a>
+      </div>
+    } @else if (upcoming.hasValue()) {
+      <p class="overline">Next launch</p>
+      <h1 id="hero-title" class="hero-title">No launches scheduled</h1>
+      <p class="hero-sub">Launch Library 2 currently lists no upcoming launches.</p>
+    } @else {
+      <h1 id="hero-title" class="visually-hidden">Loading the next launch</h1>
+      <mw-skeleton width="180px" height="12px" />
+      <mw-skeleton width="min(640px, 80vw)" height="64px" />
+      <mw-skeleton width="320px" height="16px" />
+      <mw-skeleton width="min(520px, 80vw)" height="88px" />
+    }
+  </div>
+
+  @if (next()?.imageCredit?.credit; as credit) {
+    <p class="hero-credit">
+      Image: {{ credit
+      }}{{ next()?.imageCredit?.license ? ' · ' + next()?.imageCredit?.license : '' }}
+    </p>
+  }
+  <a class="scroll-cue" href="#manifest" aria-label="Scroll to upcoming launches">
+    <mw-icon name="arrow-right" [size]="18" />
+  </a>
+</section>
+
+<div class="content">
+  <!-- ── Manifest ─────────────────────────────────────────────────────────── -->
+  <section
+    id="manifest"
+    class="block"
+    aria-labelledby="manifest-title"
+    [attr.aria-busy]="upcoming.isLoading()"
+  >
+    <header class="block-head">
+      <div>
+        <p class="overline">Manifest</p>
+        <h2 id="manifest-title">Upcoming launches</h2>
+      </div>
+      <a routerLink="/launches" [queryParams]="{ when: 'upcoming' }" class="more">
+        View all <mw-icon name="arrow-right" [size]="14" />
+      </a>
+    </header>
+    @if (upcoming.hasValue()) {
+      <div class="rows">
         @for (l of later(); track l.id) {
           <mw-launch-card [launch]="l" layout="row" />
         } @empty {
           <mw-empty-state title="No further launches scheduled" icon="calendar" />
         }
-      } @else if (!upcoming.error()) {
-        @for (i of [1, 2, 3]; track i) {
-          <mw-skeleton height="112px" />
-        }
-      }
-    </section>
-
-    <!-- Recent list -->
-    <section class="section" aria-labelledby="recent-title" [attr.aria-busy]="recent.isLoading()">
-      <div class="section-title">
-        <h2 id="recent-title">Recently completed</h2>
-        <a routerLink="/launches" [queryParams]="{ when: 'past' }" class="more">
-          View all <mw-icon name="arrow-right" [size]="14" />
-        </a>
       </div>
-      @if (recent.error()) {
-        <mw-error-state message="Recent launches could not be loaded." (retry)="recent.reload()" />
-      } @else if (recent.hasValue()) {
-        <mw-freshness [meta]="recent.value().meta" />
+      <mw-freshness [meta]="upcoming.value().meta" />
+    } @else if (!upcoming.error()) {
+      <div class="rows">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <mw-skeleton height="88px" />
+        }
+      </div>
+    }
+  </section>
+
+  <!-- ── Key figures ─────────────────────────────────────────────────────── -->
+  <section
+    class="block figures-block"
+    aria-labelledby="figures-title"
+    [attr.aria-busy]="allTime.isLoading()"
+  >
+    <h2 id="figures-title" class="visually-hidden">Launch activity</h2>
+    @if (allTime.error() || thisYear.error()) {
+      <mw-error-state
+        [message]="describeError(allTime.error() ?? thisYear.error())"
+        (retry)="allTime.reload(); thisYear.reload()"
+      />
+    } @else if (figures().length) {
+      <dl class="figures">
+        @for (f of figures(); track f.label) {
+          <div class="figure">
+            <dd>{{ f.value }}</dd>
+            <dt>{{ f.label }}</dt>
+          </div>
+        }
+      </dl>
+      <div class="figures-foot">
+        <mw-freshness [meta]="allTime.value()!.meta" [staleAfterMs]="8 * 86400000" />
+        <a routerLink="/analytics" class="more"
+          >Explore analytics <mw-icon name="arrow-right" [size]="14"
+        /></a>
+      </div>
+    } @else {
+      <div class="figures">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <mw-skeleton height="96px" />
+        }
+      </div>
+    }
+  </section>
+
+  <!-- ── Recent ──────────────────────────────────────────────────────────── -->
+  <section class="block" aria-labelledby="recent-title" [attr.aria-busy]="recent.isLoading()">
+    <header class="block-head">
+      <div>
+        <p class="overline">Completed</p>
+        <h2 id="recent-title">Recent launches</h2>
+      </div>
+      <a routerLink="/launches" [queryParams]="{ when: 'past' }" class="more">
+        View all <mw-icon name="arrow-right" [size]="14" />
+      </a>
+    </header>
+    @if (recent.error()) {
+      <mw-error-state [message]="describeError(recent.error())" (retry)="recent.reload()" />
+    } @else if (recent.hasValue()) {
+      <div class="tiles">
         @for (l of recent.value().data; track l.id) {
-          <mw-launch-card [launch]="l" layout="row" />
+          <mw-launch-card [launch]="l" />
         } @empty {
           <mw-empty-state title="No completed launches yet" icon="history" />
         }
-      } @else {
-        @for (i of [1, 2, 3]; track i) {
-          <mw-skeleton height="112px" />
-        }
-      }
-    </section>
-  </div>
-
-  <!-- Featured -->
-  <section class="section" aria-labelledby="featured-title" [attr.aria-busy]="featured.isLoading()">
-    <div class="section-title"><h2 id="featured-title">Featured missions</h2></div>
-    @if (featured.error()) {
-      <mw-error-state
-        message="Featured missions could not be loaded."
-        (retry)="featured.reload()"
-      />
-    } @else if (featured.hasValue()) {
-      <div class="grid-cards">
-        @for (l of featured.value().data; track l.id) {
-          <mw-launch-card [launch]="l" />
-        } @empty {
-          <mw-empty-state title="No featured missions right now" icon="star" />
-        }
       </div>
     } @else {
-      <div class="grid-cards">
-        @for (i of [1, 2, 3]; track i) {
+      <div class="tiles">
+        @for (i of [1, 2, 3, 4]; track i) {
           <mw-skeleton height="280px" />
         }
       </div>

@@ -45,6 +45,7 @@ describe('explorer state', () => {
 
   it('maps the timeframe to statuses when none are chosen', () => {
     expect(toLaunchQuery({ ...DEFAULT_FILTERS, when: 'past' }).statuses).toEqual([
+      'deployed',
       'success',
       'partial-failure',
       'failure',

@@ -26,24 +26,25 @@ import { Icon } from './icon';
     .tile {
       height: 100%;
       display: grid;
-      gap: var(--space-1);
+      gap: var(--space-2);
       align-content: start;
-      padding: var(--space-4) var(--space-5);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      padding: var(--space-5) 0;
+      border-top: 1px solid var(--border-strong);
     }
     .label {
       display: flex;
       align-items: center;
       gap: var(--space-2);
-      color: var(--text-secondary);
-      font-size: var(--fs-sm);
+      color: var(--text-muted);
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
     }
     .value {
-      font-size: var(--fs-2xl);
-      font-weight: 650;
-      letter-spacing: -0.02em;
+      font-size: clamp(2rem, 3.6vw, 2.75rem);
+      font-weight: 300;
+      line-height: 1.05;
     }
     .hint {
       font-size: var(--fs-xs);
