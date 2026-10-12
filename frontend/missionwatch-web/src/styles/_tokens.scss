@@ -1,0 +1,126 @@
+// Design tokens. Components reference roles (var(--…)), never raw colours.
+// Dark is the default; light is opted into via [data-theme="light"] or the OS setting.
+
+:root {
+  color-scheme: dark;
+
+  // Surfaces
+  --bg: #0a0e1a;
+  --bg-elevated: #10162a;
+  --surface: #141b31;
+  --surface-2: #1b2340;
+  --surface-hover: #212b4d;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  // Ink
+  --text: #eef0f7;
+  --text-secondary: #b4b9cc;
+  --text-muted: #8a90a6;
+
+  // Accent (restrained violet) and link blue
+  --accent: #8b7cf6;
+  --accent-strong: #a597ff;
+  --accent-soft: rgba(139, 124, 246, 0.14);
+  --on-accent: #0a0e1a;
+  --link: #8fb6ff;
+
+  // Status (reserved — always paired with icon + label)
+  --status-good: #2fbf71;
+  --status-warning: #f2b33d;
+  --status-serious: #ec835a;
+  --status-critical: #ef5b5b;
+  --status-info: #6ea8fe;
+  --status-neutral: #8a90a6;
+
+  // Charts
+  --chart-series-1: #3987e5;
+  --chart-grid: #232b45;
+  --chart-axis: #3a4363;
+
+  --focus-ring: #a597ff;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --hero-glow:
+    radial-gradient(1200px 400px at 10% -10%, rgba(139, 124, 246, 0.18), transparent 60%),
+    radial-gradient(800px 300px at 100% 0%, rgba(57, 135, 229, 0.12), transparent 60%);
+
+  // Spacing (4px scale)
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  // Radii
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  // Type
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
+  --fs-3xl: 2.25rem;
+
+  // Layout
+  --topbar-h: 60px;
+  --sidenav-w: 232px;
+  --content-max: 1280px;
+
+  // Motion
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 220ms;
+}
+
+@mixin light-theme {
+  color-scheme: light;
+  --bg: #f5f6fa;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #eef0f6;
+  --surface-hover: #e6e9f2;
+  --border: rgba(10, 14, 26, 0.1);
+  --border-strong: rgba(10, 14, 26, 0.2);
+  --text: #0e1222;
+  --text-secondary: #464c63;
+  --text-muted: #646a80;
+  --accent: #5b47d6;
+  --accent-strong: #4a37c2;
+  --accent-soft: rgba(91, 71, 214, 0.1);
+  --on-accent: #ffffff;
+  --link: #2a5bd7;
+  --status-good: #138a4b;
+  --status-warning: #a86b00;
+  --status-serious: #c2511f;
+  --status-critical: #c62f2f;
+  --status-info: #2a6fd6;
+  --status-neutral: #646a80;
+  --chart-series-1: #2a78d6;
+  --chart-grid: #e4e6ee;
+  --chart-axis: #c3c7d4;
+  --focus-ring: #5b47d6;
+  --shadow: 0 1px 2px rgba(14, 18, 34, 0.06), 0 8px 24px rgba(14, 18, 34, 0.06);
+  --hero-glow:
+    radial-gradient(1200px 400px at 10% -10%, rgba(91, 71, 214, 0.1), transparent 60%),
+    radial-gradient(800px 300px at 100% 0%, rgba(42, 120, 214, 0.08), transparent 60%);
+}
+
+:root[data-theme='light'] {
+  @include light-theme;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    @include light-theme;
+  }
+}

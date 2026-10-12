@@ -1,0 +1,109 @@
+<div class="page">
+  <mw-page-header
+    eyebrow="Transparency"
+    title="Data sources and limitations"
+    subtitle="Where MissionWatch data comes from, how fresh it is and what it cannot tell you."
+  />
+
+  <section class="panel callout" aria-labelledby="current-title">
+    <mw-icon name="info" [size]="22" />
+    <div>
+      <h2 id="current-title">Current status: demo data</h2>
+      <p>
+        This preview build runs entirely on a bundled demo dataset. Mission names, providers,
+        vehicles and sites refer to real organisations so the layouts can be judged realistically.
+        The specific launches, schedules, outcomes and historical statistics are illustrative, and
+        the historical series is synthetic. Live data integration begins in Phase 2.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="kinds-title">
+    <h2 id="kinds-title" class="section-title">Measured, derived and estimated</h2>
+    <div class="kinds">
+      <div class="panel kind">
+        <h3><mw-icon name="database" [size]="16" /> Measured</h3>
+        <p>
+          Values reported by a source, such as scheduled times, statuses and outcomes. Each one
+          keeps the source's identifier.
+        </p>
+      </div>
+      <div class="panel kind">
+        <h3><mw-icon name="layers" [size]="16" /> Derived</h3>
+        <p>
+          Values computed by MissionWatch from measured data, such as launch counts, success shares
+          and schedule shifts between snapshots.
+        </p>
+      </div>
+      <div class="panel kind">
+        <h3><mw-icon name="clock" [size]="16" /> Estimated or illustrative</h3>
+        <p>
+          Generic milestone timings, illustrative trajectories and any model output. These are
+          always labelled, and they are never presented as mission-specific fact.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="providers-title">
+    <h2 id="providers-title" class="section-title">External providers</h2>
+    <div class="table-wrap panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Source</th>
+            <th scope="col">Used for</th>
+            <th scope="col">Refresh</th>
+            <th scope="col">Status</th>
+            <th scope="col">Known limitations</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of sources; track s.name) {
+            <tr>
+              <td>
+                <a [href]="s.url" target="_blank" rel="noopener noreferrer">
+                  {{ s.name }} <span class="visually-hidden">(opens in a new tab)</span>
+                </a>
+              </td>
+              <td>{{ s.use }}</td>
+              <td>{{ s.refresh }}</td>
+              <td>
+                <span class="tag">{{ s.status }}</span>
+              </td>
+              <td>{{ s.limitations }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="model-title">
+    <h2 id="model-title" class="section-title">Models and predictions</h2>
+    <div class="panel prose">
+      <p>
+        No predictive model is deployed. Delay-risk estimates (FR-11) will only appear after a model
+        has been trained on stored schedule snapshots, evaluated on chronologically later data and
+        compared with a simple baseline. Each prediction will show the model version, the training
+        period and the evaluation results. If the data turns out to be insufficient, MissionWatch
+        will publish historical analytics only.
+      </p>
+      <p>
+        Explanations such as SHAP describe how the model behaves. They do not establish real-world
+        causes of a postponement.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="disclaimer-title">
+    <h2 id="disclaimer-title" class="section-title">Disclaimer</h2>
+    <div class="panel prose">
+      <p>
+        MissionWatch is an independent portfolio project. It does not replace official announcements
+        from launch providers, and it offers no safety advice. Launch times and visibility are not
+        guaranteed.
+      </p>
+    </div>
+  </section>
+</div>

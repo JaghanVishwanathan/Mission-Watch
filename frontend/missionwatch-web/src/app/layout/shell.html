@@ -1,0 +1,84 @@
+<a class="skip-link" href="#main" (click)="focusMain($event)">Skip to main content</a>
+
+<header class="topbar">
+  <button
+    type="button"
+    class="btn btn--ghost btn--icon menu-btn"
+    [attr.aria-expanded]="navOpen()"
+    aria-controls="sidenav"
+    [attr.aria-label]="navOpen() ? 'Close navigation' : 'Open navigation'"
+    (click)="navOpen.set(!navOpen())"
+  >
+    <mw-icon [name]="navOpen() ? 'x' : 'menu'" [size]="20" />
+  </button>
+
+  <a routerLink="/" class="brand" aria-label="MissionWatch home">
+    <span class="brand-mark" aria-hidden="true"><mw-icon name="orbit" [size]="20" /></span>
+    <span class="brand-name">Mission<strong>Watch</strong></span>
+  </a>
+
+  <div class="topbar-actions">
+    <a routerLink="/launches" class="btn btn--ghost search-link">
+      <mw-icon name="search" [size]="16" />
+      <span class="search-label">Search launches</span>
+    </a>
+    <button
+      type="button"
+      class="btn btn--ghost btn--icon"
+      (click)="theme.toggle()"
+      [attr.aria-label]="
+        theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+      "
+    >
+      <mw-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" [size]="18" />
+    </button>
+  </div>
+</header>
+
+<div class="frame">
+  <nav id="sidenav" class="sidenav" [class.open]="navOpen()" aria-label="Primary">
+    @for (group of navGroups; track group.heading) {
+      <div class="nav-group">
+        <p class="nav-heading">{{ group.heading }}</p>
+        <ul>
+          @for (item of group.items; track item.path) {
+            <li>
+              <a
+                [routerLink]="item.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: !!item.exact }"
+                ariaCurrentWhenActive="page"
+              >
+                <mw-icon [name]="item.icon" [size]="18" />
+                {{ item.label }}
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </nav>
+
+  @if (navOpen()) {
+    <div class="scrim" (click)="navOpen.set(false)" aria-hidden="true"></div>
+  }
+
+  <div class="content">
+    <div class="demo-banner" role="note">
+      <mw-icon name="info" [size]="16" />
+      <span>
+        <strong>Preview build.</strong> All launches and statistics shown are demo data for layout
+        and testing, not real launch records. Live data arrives in Phase 2.
+      </span>
+    </div>
+
+    <main id="main" tabindex="-1">
+      <router-outlet />
+    </main>
+
+    <footer class="footer">
+      <span>© {{ year }} MissionWatch. Not affiliated with any launch provider or agency.</span>
+      <a routerLink="/about/data-sources">Data sources and limitations</a>
+    </footer>
+  </div>
+</div>

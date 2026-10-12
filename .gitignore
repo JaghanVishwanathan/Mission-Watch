@@ -1,0 +1,45 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+coverage/
+npm-debug.log*
+
+# Java / Spring Boot
+target/
+build/
+.gradle/
+*.class
+*.log
+
+# Python / data science
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+data-science/data/
+data-science/**/*.parquet
+data-science/**/*.csv
+data-science/**/*.pkl
+data-science/**/*.joblib
+data-science/models/*
+!data-science/models/.gitkeep
+!data-science/models/README.md

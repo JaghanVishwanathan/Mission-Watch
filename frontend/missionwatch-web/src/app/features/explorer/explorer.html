@@ -1,0 +1,190 @@
+@let f = filters();
+
+<div class="page">
+  <mw-page-header
+    eyebrow="Launch catalogue"
+    title="Launch Explorer"
+    subtitle="Search and filter upcoming and historical launches by mission, provider, rocket, status and date."
+  >
+    <div class="view-toggle" role="group" aria-label="Result layout">
+      <button
+        type="button"
+        class="btn btn--icon"
+        [attr.aria-pressed]="f.view === 'grid'"
+        (click)="setView('grid')"
+        aria-label="Grid view"
+      >
+        <mw-icon name="grid" [size]="18" />
+      </button>
+      <button
+        type="button"
+        class="btn btn--icon"
+        [attr.aria-pressed]="f.view === 'list'"
+        (click)="setView('list')"
+        aria-label="List view"
+      >
+        <mw-icon name="list" [size]="18" />
+      </button>
+    </div>
+  </mw-page-header>
+
+  <section class="filters panel" aria-label="Search and filters">
+    <div class="filter-row primary">
+      <label class="search">
+        <span class="visually-hidden">Search by mission, provider or rocket</span>
+        <mw-icon name="search" [size]="18" />
+        <input
+          type="search"
+          class="input"
+          placeholder="Search mission, provider or rocket…"
+          [value]="textInput()"
+          (input)="textInput.set(inputValue($event))"
+          maxlength="100"
+          autocomplete="off"
+        />
+      </label>
+
+      <div class="segmented" role="group" aria-label="Launch timeframe">
+        @for (
+          option of [
+            { v: 'all', l: 'All' },
+            { v: 'upcoming', l: 'Upcoming' },
+            { v: 'past', l: 'Past' },
+          ];
+          track option.v
+        ) {
+          <button
+            type="button"
+            [attr.aria-pressed]="f.when === option.v"
+            (click)="setWhen($any(option.v))"
+          >
+            {{ option.l }}
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="btn more-filters"
+        [attr.aria-expanded]="filtersOpen()"
+        aria-controls="advanced-filters"
+        (click)="filtersOpen.set(!filtersOpen())"
+      >
+        Filters
+        @if (activeCount() > 0) {
+          <span class="count" aria-label="active filters">{{ activeCount() }}</span>
+        }
+      </button>
+    </div>
+
+    <div id="advanced-filters" class="filter-row advanced" [class.open]="filtersOpen()">
+      <label class="control">
+        <span>Provider</span>
+        <select
+          class="select"
+          [value]="f.providerId"
+          (change)="update({ providerId: inputValue($event) })"
+        >
+          <option value="">All providers</option>
+          @if (providers.hasValue()) {
+            @for (p of providers.value().data; track p.id) {
+              <option [value]="p.id" [selected]="p.id === f.providerId">{{ p.name }}</option>
+            }
+          }
+        </select>
+      </label>
+
+      <label class="control">
+        <span>From</span>
+        <input
+          type="date"
+          class="input"
+          [value]="f.from"
+          [max]="f.to || null"
+          (change)="update({ from: inputValue($event) })"
+        />
+      </label>
+
+      <label class="control">
+        <span>To</span>
+        <input
+          type="date"
+          class="input"
+          [value]="f.to"
+          [min]="f.from || null"
+          (change)="update({ to: inputValue($event) })"
+        />
+      </label>
+
+      <label class="control">
+        <span>Sort by</span>
+        <select class="select" (change)="setSort(inputValue($event))">
+          @for (o of sortOptions; track o.value) {
+            <option [value]="o.value" [selected]="o.value === sortValue()">{{ o.label }}</option>
+          }
+        </select>
+      </label>
+
+      <fieldset class="statuses">
+        <legend>Status</legend>
+        <div class="chips">
+          @for (s of statusOptions(); track s.value) {
+            <button
+              type="button"
+              class="chip"
+              [attr.aria-pressed]="f.statuses.includes(s.value)"
+              (click)="toggleStatus(s.value)"
+            >
+              @if (f.statuses.includes(s.value)) {
+                <mw-icon name="check-circle" [size]="14" />
+              }
+              {{ s.label }}
+            </button>
+          }
+        </div>
+      </fieldset>
+    </div>
+  </section>
+
+  <section class="results" aria-labelledby="results-title" [attr.aria-busy]="results.isLoading()">
+    <div class="results-head">
+      <h2 id="results-title" class="visually-hidden">Results</h2>
+      <p class="result-count" role="status" aria-live="polite">
+        @if (shown(); as r) {
+          {{ r.data.length }} {{ r.data.length === 1 ? 'launch' : 'launches' }}
+        } @else if (results.isLoading()) {
+          Searching…
+        }
+      </p>
+      @if (shown(); as r) {
+        <mw-freshness [meta]="r.meta" />
+      }
+      @if (activeCount() > 0) {
+        <button type="button" class="btn btn--ghost" (click)="reset()">Clear filters</button>
+      }
+    </div>
+
+    @if (results.error()) {
+      <mw-error-state message="Launches could not be loaded." (retry)="results.reload()" />
+    } @else if (shown(); as r) {
+      <div [class]="f.view === 'grid' ? 'grid-cards' : 'list'" [class.dim]="results.isLoading()">
+        @for (l of r.data; track l.id) {
+          <mw-launch-card [launch]="l" [layout]="f.view === 'grid' ? 'grid' : 'row'" />
+        } @empty {
+          <mw-empty-state
+            title="No launches match these filters"
+            message="Try a broader search or clear some filters."
+          >
+            <button type="button" class="btn" (click)="reset()">Clear filters</button>
+          </mw-empty-state>
+        }
+      </div>
+    } @else {
+      <div class="grid-cards">
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <mw-skeleton height="280px" />
+        }
+      </div>
+    }
+  </section>
+</div>

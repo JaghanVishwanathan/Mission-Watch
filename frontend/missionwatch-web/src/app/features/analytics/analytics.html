@@ -1,0 +1,198 @@
+@let f = filter();
+
+<div class="page">
+  <mw-page-header
+    eyebrow="Historical launch analytics"
+    title="Analytics"
+    subtitle="Launch cadence, provider activity and outcome distributions across completed orbital launch attempts."
+  />
+
+  <div class="filters panel" role="group" aria-label="Analytics filters">
+    <label class="control">
+      <span>From year</span>
+      <select class="select" (change)="setYear('fromYear', selectValue($event))">
+        <option value="" [selected]="!f.fromYear">Earliest</option>
+        @for (y of years; track y) {
+          <option [value]="y" [selected]="f.fromYear === y" [disabled]="!!f.toYear && y > f.toYear">
+            {{ y }}
+          </option>
+        }
+      </select>
+    </label>
+    <label class="control">
+      <span>To year</span>
+      <select class="select" (change)="setYear('toYear', selectValue($event))">
+        <option value="" [selected]="!f.toYear">Latest</option>
+        @for (y of years; track y) {
+          <option
+            [value]="y"
+            [selected]="f.toYear === y"
+            [disabled]="!!f.fromYear && y < f.fromYear"
+          >
+            {{ y }}
+          </option>
+        }
+      </select>
+    </label>
+    <label class="control">
+      <span>Provider</span>
+      <select class="select" (change)="setProvider(selectValue($event))">
+        <option value="" [selected]="!f.providerIds?.length">All providers</option>
+        @if (providers.hasValue()) {
+          @for (p of providers.value().data; track p.id) {
+            <option [value]="p.id" [selected]="f.providerIds?.[0] === p.id">{{ p.name }}</option>
+          }
+        }
+      </select>
+    </label>
+    <button
+      type="button"
+      class="btn btn--ghost"
+      (click)="reset()"
+      [disabled]="!f.fromYear && !f.toYear && !f.providerIds?.length"
+    >
+      Reset
+    </button>
+  </div>
+
+  @if (analytics.hasValue()) {
+    <div class="meta-row">
+      <mw-freshness [meta]="analytics.value().meta" />
+      @for (w of analytics.value().meta.warnings; track w) {
+        <p class="warning"><mw-icon name="alert" [size]="14" /> {{ w }}</p>
+      }
+    </div>
+  }
+
+  <div [attr.aria-busy]="analytics.isLoading()" class="body">
+    @if (analytics.error()) {
+      <mw-error-state message="Analytics could not be computed." (retry)="analytics.reload()" />
+    } @else if (summary(); as s) {
+      @if (s.total === 0) {
+        <mw-empty-state
+          title="No completed launches in this range"
+          message="Widen the year range or choose a different provider."
+          icon="chart"
+        />
+      } @else {
+        <div class="tiles">
+          @for (t of tiles(); track t.label) {
+            <mw-stat-tile [label]="t.label" [value]="t.value" [hint]="t.hint" [icon]="t.icon" />
+          }
+        </div>
+
+        <p class="range">
+          Covering
+          <time [attr.datetime]="s.firstLaunch">{{ s.firstLaunch | date: 'MMM y' }}</time>
+          to
+          <time [attr.datetime]="s.lastLaunch">{{ s.lastLaunch | date: 'MMM y' }}</time>
+          · n = {{ s.total.toLocaleString() }} launches
+        </p>
+
+        <div class="charts">
+          @if (yearChart(); as c) {
+            <mw-chart-panel
+              class="wide"
+              id="per-year"
+              title="Launches per year"
+              [subtitle]="
+                'Completed launch attempts per calendar year, n = ' + s.total.toLocaleString()
+              "
+              footnote="The current year is partial."
+              [options]="c.options"
+              [columns]="[
+                { key: 'year', label: 'Year' },
+                { key: 'launches', label: 'Launches', numeric: true },
+              ]"
+              [rows]="c.rows"
+            />
+          }
+          @if (monthChart(); as c) {
+            <mw-chart-panel
+              class="wide"
+              id="per-month"
+              title="Monthly cadence"
+              subtitle="Launches per month, most recent 24 months with activity"
+              [options]="c.options"
+              [columns]="[
+                { key: 'month', label: 'Month' },
+                { key: 'launches', label: 'Launches', numeric: true },
+              ]"
+              [rows]="c.rows"
+            />
+          }
+          @if (providerChart(); as c) {
+            <mw-chart-panel
+              id="providers"
+              title="Launches by provider"
+              subtitle="Top 8 providers by volume. The table lists all of them."
+              [footnote]="
+                'Success rates are withheld for providers with fewer than ' +
+                minSample +
+                ' launches; small samples are not comparable.'
+              "
+              [options]="c.options"
+              [height]="320"
+              [columns]="[
+                { key: 'provider', label: 'Provider' },
+                { key: 'launches', label: 'Launches', numeric: true },
+                { key: 'successes', label: 'Successes', numeric: true },
+                { key: 'rate', label: 'Success rate', numeric: true },
+              ]"
+              [rows]="c.rows"
+            />
+          }
+          @if (outcomeChart(); as c) {
+            <mw-chart-panel
+              id="outcomes"
+              title="Outcome distribution"
+              subtitle="Share of completed launches by recorded outcome"
+              footnote="A partial failure means the vehicle flew but the payload did not reach its intended orbit."
+              [options]="c.options"
+              [height]="200"
+              [columns]="[
+                { key: 'outcome', label: 'Outcome' },
+                { key: 'launches', label: 'Launches', numeric: true },
+                { key: 'share', label: 'Share', numeric: true },
+              ]"
+              [rows]="c.rows"
+            />
+          }
+        </div>
+
+        <section class="panel sites" aria-labelledby="sites-title">
+          <h2 id="sites-title">Busiest launch sites</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Site</th>
+                <th scope="col" class="num">Launches</th>
+                <th scope="col" class="num">Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (site of topSites(); track site.key) {
+                <tr>
+                  <td>{{ site.label }}</td>
+                  <td class="num">{{ site.count.toLocaleString() }}</td>
+                  <td class="num">{{ ((site.count / s.total) * 100).toFixed(1) }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+    } @else {
+      <div class="tiles">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <mw-skeleton height="104px" />
+        }
+      </div>
+      <div class="charts">
+        <mw-skeleton class="wide" height="340px" />
+        <mw-skeleton height="380px" />
+        <mw-skeleton height="380px" />
+      </div>
+    }
+  </div>
+</div>
