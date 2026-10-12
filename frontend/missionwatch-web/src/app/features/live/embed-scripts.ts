@@ -35,8 +35,6 @@ export interface YtNamespace {
 }
 
 export interface XWidgets {
-  /** Renders any widget blockquotes (e.g. twitter-broadcast) inside the element. */
-  load(el?: HTMLElement): Promise<unknown> | void;
   createTweet(
     id: string,
     el: HTMLElement,

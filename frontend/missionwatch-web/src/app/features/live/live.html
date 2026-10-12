@@ -38,6 +38,9 @@
 
     <div class="t0" [attr.aria-busy]="launch.isLoading() && !l()">
       @if (t0(); as target) {
+        @if (exactT0()) {
+          <mw-countdown [target]="target" [display]="true" />
+        }
         <p class="t0-when">
           Target T-0
           <time [attr.datetime]="target">{{ target | date: 'EEE d MMM y, HH:mm:ss zzzz' }}</time>
@@ -49,20 +52,12 @@
           }
         </p>
       } @else if (launch.isLoading()) {
-        <mw-skeleton height="20px" width="min(320px, 100%)" />
+        <mw-skeleton height="88px" width="min(420px, 100%)" />
       } @else {
         <p class="t0-when">Target time not yet known.</p>
       }
     </div>
   </header>
-
-  <!-- Mission arc: live clock and event progress -->
-  <mw-mission-arc
-    [events]="events()"
-    [t0]="exactT0() ? t0() : undefined"
-    [now]="now()"
-    [missionName]="missionName()"
-  />
 
   <!-- Consent gate for third-party content (NFR-008) -->
   @if (!consented()) {
@@ -114,6 +109,7 @@
       }
     </div>
 
+    <!-- 2×2 on wide screens: three broadcasts plus the community panel -->
     <div class="streams">
       @for (s of streams(); track mission().id + s.id) {
         @let status = statuses()[s.id];
@@ -124,7 +120,7 @@
           [status]="status"
           [externalUrl]="s.externalUrl"
           [externalLabel]="s.externalLabel"
-          [fixedRatio]="s.kind === 'youtube'"
+          [fixedRatio]="s.kind === 'youtube' || !!s.broadcastId"
         >
           @if (!consented()) {
             <div class="placeholder">
@@ -139,15 +135,26 @@
               [scheduledStart]="s.scheduledStart"
               (status)="setStatus(s.id, $event)"
             />
-          } @else if (s.broadcastId || s.postId) {
-            <mw-x-post
+          } @else if (s.broadcastId) {
+            <mw-x-broadcast
               [broadcastId]="s.broadcastId"
-              [postId]="s.postId"
+              [title]="s.broadcaster + ' broadcast on X'"
               (status)="setStatus(s.id, $event)"
             />
+          } @else if (s.postId) {
+            <mw-x-post [postId]="s.postId" (status)="setStatus(s.id, $event)" />
           }
         </mw-stream-card>
       }
+
+      <section class="community" aria-labelledby="community-title">
+        <h3 id="community-title">Community</h3>
+        <mw-community-panel
+          [chatSources]="chatSources()"
+          [xDiscussion]="xDiscussion()"
+          [consented]="consented()"
+        />
+      </section>
     </div>
     @if (consented()) {
       <p class="fine">
@@ -161,38 +168,25 @@
     }
   </section>
 
-  <!-- Timeline and community -->
-  <div class="lower">
-    <section class="panel" aria-labelledby="timeline-title">
-      <div class="panel-head">
-        <h2 id="timeline-title">Mission timeline</h2>
-        @if (meta(); as m) {
-          <mw-freshness [meta]="m" [staleAfterMs]="3_600_000" />
-        }
-      </div>
-      @if (loadError(); as err) {
-        <p class="warn-box" role="status">
-          <mw-icon name="alert" [size]="14" />
-          {{ l() ? 'Showing the last known schedule. ' : '' }}{{ err }}
-          <button type="button" class="link-btn" (click)="launch.reload()">Retry</button>
-        </p>
+  <!-- Timeline -->
+  <section class="panel" aria-labelledby="timeline-title">
+    <div class="panel-head">
+      <h2 id="timeline-title">Mission timeline</h2>
+      @if (meta(); as m) {
+        <mw-freshness [meta]="m" [staleAfterMs]="3_600_000" />
       }
-      <p class="fine">
-        Times are shown in your local timezone. Events are confirmed only by launch data, never by
-        what a stream shows.
+    </div>
+    @if (loadError(); as err) {
+      <p class="warn-box" role="status">
+        <mw-icon name="alert" [size]="14" />
+        {{ l() ? 'Showing the last known schedule. ' : '' }}{{ err }}
+        <button type="button" class="link-btn" (click)="launch.reload()">Retry</button>
       </p>
-      <mw-mission-timeline [events]="events()" [currentId]="currentEventId()" />
-    </section>
-
-    <section class="panel community" aria-labelledby="community-title">
-      <div class="panel-head">
-        <h2 id="community-title">Community</h2>
-      </div>
-      <mw-community-panel
-        [chatSources]="chatSources()"
-        [xDiscussion]="xDiscussion()"
-        [consented]="consented()"
-      />
-    </section>
-  </div>
+    }
+    <p class="fine">
+      Times are shown in your local timezone. Events are confirmed only by launch data, never by
+      what a stream shows.
+    </p>
+    <mw-mission-timeline [events]="events()" [currentId]="currentEventId()" />
+  </section>
 </div>

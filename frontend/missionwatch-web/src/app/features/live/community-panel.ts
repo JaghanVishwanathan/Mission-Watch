@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ThemeService } from '../../core/state/theme.service';
 import { Icon } from '../../shared/ui/icon';
 import { StreamState } from './live.models';
 import { XPost } from './x-post';
@@ -154,6 +155,7 @@ const MOBILE_QUERY = '(max-width: 719px), (hover: none) and (pointer: coarse)';
     :host {
       display: grid;
       grid-template-rows: auto 1fr;
+      height: 100%;
       min-height: 0;
     }
     .tabs {
@@ -161,6 +163,8 @@ const MOBILE_QUERY = '(max-width: 719px), (hover: none) and (pointer: coarse)';
       gap: var(--space-1);
       border-bottom: 1px solid var(--border);
       overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
     }
     [role='tab'] {
       padding: var(--space-3) var(--space-3);
@@ -180,18 +184,22 @@ const MOBILE_QUERY = '(max-width: 719px), (hover: none) and (pointer: coarse)';
       color: var(--text);
       border-bottom-color: var(--text);
     }
+    /* Column flex so the chat or the X post fills whatever height the tile has. */
     .panel-body {
       padding-top: var(--space-4);
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: var(--space-3);
-      align-content: start;
+      min-height: 0;
     }
     .chat {
+      flex: 1 1 auto;
       width: 100%;
-      height: 520px;
+      min-height: 420px;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      background: #fff;
+      background: transparent;
+      color-scheme: normal;
     }
     .note {
       display: grid;
@@ -212,11 +220,16 @@ const MOBILE_QUERY = '(max-width: 719px), (hover: none) and (pointer: coarse)';
       color: inherit;
     }
     .x {
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: var(--space-3);
+      flex: 1 1 auto;
+      min-height: 0;
     }
     .x-embed {
-      max-height: 520px;
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: 640px;
       overflow-y: auto;
     }
     .x-links {
@@ -229,6 +242,7 @@ const MOBILE_QUERY = '(max-width: 719px), (hover: none) and (pointer: coarse)';
 export class CommunityPanel {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly document = inject(DOCUMENT);
+  private readonly theme = inject(ThemeService);
 
   readonly chatSources = input.required<ChatSource[]>();
   readonly xDiscussion = input.required<XDiscussion>();
@@ -252,7 +266,9 @@ export class CommunityPanel {
     const id = this.chat()?.videoId;
     if (!id || !/^[\w-]{11}$/.test(id)) return undefined;
     const domain = this.document.location?.hostname ?? '';
-    const url = `https://www.youtube.com/live_chat?v=${id}&embed_domain=${encodeURIComponent(domain)}`;
+    // dark_theme=1 makes YouTube render the chat to match the dark site theme.
+    const dark = this.theme.theme() === 'dark' ? '&dark_theme=1' : '';
+    const url = `https://www.youtube.com/live_chat?v=${id}&embed_domain=${encodeURIComponent(domain)}${dark}`;
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   });
 

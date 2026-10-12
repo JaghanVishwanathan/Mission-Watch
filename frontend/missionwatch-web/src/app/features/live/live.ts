@@ -14,6 +14,7 @@ import { Router, RouterLink } from '@angular/router';
 import { of, switchMap } from 'rxjs';
 import { describeError, LAUNCH_DATA } from '../../core/data';
 import { DataMeta, DataResponse, Launch } from '../../core/models';
+import { Countdown } from '../../shared/ui/countdown';
 import { FreshnessIndicator } from '../../shared/ui/freshness-indicator';
 import { Icon } from '../../shared/ui/icon';
 import { Skeleton } from '../../shared/ui/skeleton';
@@ -29,9 +30,9 @@ import {
   parseYoutubeId,
   safeHttpsUrl,
 } from './live-util';
-import { MissionArc } from './mission-arc';
 import { MissionTimeline } from './mission-timeline';
 import { StreamCard } from './stream-card';
+import { XBroadcast } from './x-broadcast';
 import { XPost } from './x-post';
 import { YoutubePlayer } from './youtube-player';
 
@@ -133,12 +134,13 @@ function initialStatus(v: StreamView, consented: boolean, now: number): StreamSt
     DatePipe,
     RouterLink,
     CommunityPanel,
+    Countdown,
     FreshnessIndicator,
     Icon,
-    MissionArc,
     MissionTimeline,
     Skeleton,
     StreamCard,
+    XBroadcast,
     XPost,
     YoutubePlayer,
   ],
@@ -260,7 +262,7 @@ export class Live {
     return !p || p === 'second' || p === 'minute';
   });
 
-  protected readonly now = signal(Date.now());
+  private readonly now = signal(Date.now());
   protected readonly events = computed(() => {
     const l = this.l();
     return buildTimeline({
