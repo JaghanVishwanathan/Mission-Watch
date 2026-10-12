@@ -147,14 +147,12 @@ export class LiveLaunchDataService implements LaunchDataSource {
   }
 
   getAnalytics(filter: AnalyticsFilter): Observable<DataResponse<AnalyticsSummary>> {
-    return this.history
-      .load()
-      .pipe(
-        map(({ records, meta }) => ({
-          data: computeAnalytics(applyAnalyticsFilter(records, filter)),
-          meta,
-        })),
-      );
+    return this.history.load().pipe(
+      map(({ records, meta }) => ({
+        data: computeAnalytics(applyAnalyticsFilter(records, filter)),
+        meta,
+      })),
+    );
   }
 
   getAnalyticsOptions(): Observable<DataResponse<AnalyticsOptions>> {

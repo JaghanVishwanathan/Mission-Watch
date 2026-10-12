@@ -1,30 +1,23 @@
 <a class="skip-link" href="#main" (click)="focusMain($event)">Skip to main content</a>
 
-<header class="topbar">
-  <button
-    type="button"
-    class="btn btn--ghost btn--icon menu-btn"
-    [attr.aria-expanded]="navOpen()"
-    aria-controls="sidenav"
-    [attr.aria-label]="navOpen() ? 'Close navigation' : 'Open navigation'"
-    (click)="navOpen.set(!navOpen())"
-  >
-    <mw-icon [name]="navOpen() ? 'x' : 'menu'" [size]="20" />
-  </button>
-
+<header class="topbar" [class.solid]="scrolled() || menuOpen()">
   <a routerLink="/" class="brand" aria-label="MissionWatch home">
-    <span class="brand-mark" aria-hidden="true"><mw-icon name="orbit" [size]="20" /></span>
-    <span class="brand-name">Mission<strong>Watch</strong></span>
+    <mw-icon name="orbit" [size]="22" />
+    <span class="wordmark">MissionWatch</span>
   </a>
 
-  <div class="topbar-actions">
-    <a routerLink="/launches" class="btn btn--ghost search-link">
-      <mw-icon name="search" [size]="16" />
-      <span class="search-label">Search launches</span>
-    </a>
+  <nav class="primary" aria-label="Primary">
+    @for (item of primaryNav; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{
+        item.label
+      }}</a>
+    }
+  </nav>
+
+  <div class="actions">
     <button
       type="button"
-      class="btn btn--ghost btn--icon"
+      class="icon-btn"
       (click)="theme.toggle()"
       [attr.aria-label]="
         theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
@@ -32,61 +25,65 @@
     >
       <mw-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" [size]="18" />
     </button>
+    <button
+      type="button"
+      class="icon-btn menu-btn"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="menu"
+      [attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      <span class="burger" [class.open]="menuOpen()" aria-hidden="true"
+        ><span></span><span></span
+      ></span>
+    </button>
   </div>
 </header>
 
-<div class="frame">
-  <nav id="sidenav" class="sidenav" [class.open]="navOpen()" aria-label="Primary">
-    @for (group of navGroups; track group.heading) {
-      <div class="nav-group">
-        <p class="nav-heading">{{ group.heading }}</p>
-        <ul>
-          @for (item of group.items; track item.path) {
-            <li>
-              <a
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                [routerLinkActiveOptions]="{ exact: !!item.exact }"
-                ariaCurrentWhenActive="page"
-              >
-                <mw-icon [name]="item.icon" [size]="18" />
-                {{ item.label }}
-              </a>
-            </li>
-          }
-        </ul>
-      </div>
+<nav
+  id="menu"
+  class="menu"
+  [class.open]="menuOpen()"
+  aria-label="Site menu"
+  [attr.inert]="menuOpen() ? null : ''"
+>
+  <ul>
+    @for (item of menuNav; track item.path) {
+      <li>
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: !!item.exact }"
+          ariaCurrentWhenActive="page"
+          >{{ item.label }}</a
+        >
+      </li>
     }
-  </nav>
+  </ul>
+</nav>
+@if (menuOpen()) {
+  <div class="scrim" (click)="menuOpen.set(false)" aria-hidden="true"></div>
+}
 
-  @if (navOpen()) {
-    <div class="scrim" (click)="navOpen.set(false)" aria-hidden="true"></div>
-  }
+<main id="main" tabindex="-1">
+  <router-outlet />
+</main>
 
-  <div class="content">
-    <main id="main" tabindex="-1">
-      <router-outlet />
-    </main>
-
-    <footer class="footer">
-      <p class="credits">
-        Launch data from
-        <a href="https://thespacedevs.com/llapi" target="_blank" rel="noopener noreferrer"
-          >Launch Library 2</a
-        >
-        by The Space Devs. Launch history from
-        <a href="https://planet4589.org/space/gcat" target="_blank" rel="noopener noreferrer"
-          >GCAT</a
-        >
-        by Jonathan McDowell (CC BY 4.0). Imagery from the
-        <a href="https://images.nasa.gov" target="_blank" rel="noopener noreferrer"
-          >NASA Image and Video Library</a
-        >.
-      </p>
-      <div class="footer-row">
-        <span>© {{ year }} MissionWatch. Not affiliated with any launch provider or agency.</span>
-        <a routerLink="/about/data-sources">Data sources and limitations</a>
-      </div>
-    </footer>
+<footer class="footer">
+  <div class="footer-inner">
+    <p class="credits">
+      Launch data:
+      <a href="https://thespacedevs.com/llapi" target="_blank" rel="noopener noreferrer"
+        >Launch Library 2</a
+      >
+      (The Space Devs) · History:
+      <a href="https://planet4589.org/space/gcat" target="_blank" rel="noopener noreferrer">GCAT</a>
+      (J. McDowell, CC BY 4.0) · Imagery:
+      <a href="https://images.nasa.gov" target="_blank" rel="noopener noreferrer">NASA</a>
+    </p>
+    <div class="footer-row">
+      <span>MissionWatch © {{ year }} · Not affiliated with any launch provider or agency</span>
+      <a routerLink="/about/data-sources">Data sources</a>
+    </div>
   </div>
-</div>
+</footer>

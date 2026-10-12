@@ -10,7 +10,7 @@ import { Icon } from './icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span [class]="'badge tone-' + info().tone" [attr.title]="info().description">
-      <mw-icon [name]="info().icon" [size]="14" />
+      <mw-icon [name]="info().icon" [size]="13" />
       {{ info().label }}
     </span>
   `,
@@ -19,13 +19,11 @@ import { Icon } from './icon';
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 2px 10px 2px 8px;
-      border-radius: var(--radius-pill);
-      font-size: var(--fs-xs);
+      font-size: 0.6875rem;
       font-weight: 600;
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
       white-space: nowrap;
-      border: 1px solid currentColor;
-      background: color-mix(in srgb, currentColor 12%, transparent);
     }
     .tone-good {
       color: var(--status-good);

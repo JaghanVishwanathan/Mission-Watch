@@ -23,26 +23,32 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       flex-wrap: wrap;
       align-items: flex-end;
       justify-content: space-between;
-      gap: var(--space-4);
+      gap: var(--space-5);
+      padding-bottom: var(--space-6);
+      border-bottom: 1px solid var(--border);
     }
     .text {
       display: grid;
-      gap: var(--space-2);
+      gap: var(--space-3);
       min-width: 0;
     }
     h1 {
-      font-size: var(--fs-3xl);
+      font-size: clamp(2.25rem, 5vw, 3.75rem);
+      line-height: 1;
+      letter-spacing: 0.03em;
     }
     .eyebrow {
       font-size: var(--fs-xs);
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--accent-strong);
-      font-weight: 650;
+      letter-spacing: var(--tracking-wide);
+      color: var(--text-muted);
+      font-weight: 600;
     }
     .subtitle {
       color: var(--text-secondary);
-      max-width: 70ch;
+      max-width: 68ch;
+      font-size: var(--fs-lg);
+      font-weight: 300;
     }
     .actions {
       display: flex;
@@ -52,11 +58,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     }
     .actions:empty {
       display: none;
-    }
-    @media (max-width: 600px) {
-      h1 {
-        font-size: var(--fs-2xl);
-      }
     }
   `,
 })

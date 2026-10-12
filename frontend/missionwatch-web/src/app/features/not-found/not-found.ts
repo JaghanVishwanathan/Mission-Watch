@@ -7,14 +7,16 @@ import { EmptyState } from '../../shared/ui/empty-state';
   imports: [RouterLink, EmptyState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1 class="visually-hidden">Page not found</h1>
-    <mw-empty-state
-      title="Lost in space"
-      message="This page doesn't exist. It may have moved, or the link may be wrong."
-      icon="orbit"
-    >
-      <a routerLink="/" class="btn btn--primary">Back to dashboard</a>
-    </mw-empty-state>
+    <div class="page">
+      <h1 class="visually-hidden">Page not found</h1>
+      <mw-empty-state
+        title="Lost in space"
+        message="This page doesn't exist. It may have moved, or the link may be wrong."
+        icon="orbit"
+      >
+        <a routerLink="/" class="btn btn--primary">Back to dashboard</a>
+      </mw-empty-state>
+    </div>
   `,
 })
 export class NotFound {}

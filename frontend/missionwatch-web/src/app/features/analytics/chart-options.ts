@@ -21,28 +21,28 @@ export interface ChartPalette {
 
 export const PALETTES: Record<Theme, ChartPalette> = {
   dark: {
-    series: '#3987e5',
-    text: '#eef0f7',
-    muted: '#8a90a6',
-    grid: '#232b45',
-    axis: '#3a4363',
-    tooltipBg: '#1b2340',
+    series: '#d6d9de',
+    text: '#ffffff',
+    muted: '#8c8c8c',
+    grid: '#1c1e22',
+    axis: '#34373d',
+    tooltipBg: '#0c0d0f',
     tooltipBorder: 'rgba(255,255,255,0.16)',
     status: { good: '#2fbf71', serious: '#ec835a', critical: '#ef5b5b' },
   },
   light: {
-    series: '#2a78d6',
-    text: '#0e1222',
-    muted: '#646a80',
-    grid: '#e4e6ee',
-    axis: '#c3c7d4',
+    series: '#24272c',
+    text: '#000000',
+    muted: '#62666e',
+    grid: '#e8e8eb',
+    axis: '#c4c6cc',
     tooltipBg: '#ffffff',
     tooltipBorder: 'rgba(10,14,26,0.12)',
     status: { good: '#138a4b', serious: '#c2511f', critical: '#c62f2f' },
   },
 };
 
-const FONT = 'Inter, system-ui, -apple-system, "Segoe UI", sans-serif';
+const FONT = 'Barlow, system-ui, -apple-system, "Segoe UI", sans-serif';
 
 function base(p: ChartPalette, reducedMotion: boolean, description: string): EChartsCoreOption {
   return {
