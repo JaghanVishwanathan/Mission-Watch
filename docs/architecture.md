@@ -89,5 +89,5 @@ frontend/missionwatch-web/
 
 ## Deployment
 
-- **Frontend:** GitHub Pages, built by `.github/workflows/deploy-pages.yml`, which first runs `npm run data:history` and then builds with `--base-href /<repo-name>/`. It runs on every push to `main` and weekly, so the GCAT snapshot stays current. `index.html` is copied to `404.html` so nested routes still resolve on a full page load.
+- **Frontend:** GitHub Pages, built by `.github/workflows/deploy-pages.yml`, which first runs `npm run data:history` and then builds with `--base-href /`, since the site is served from the root of `missionwatch.jaghan.com`. It runs on every push to `main` and weekly, so the GCAT snapshot stays current. `index.html` is copied to `404.html` so nested routes still resolve on a full page load.
 - **Backend, database and ML service:** a separate host, to be chosen in Phase 4 or Phase 8. GitHub Pages can only serve static files.

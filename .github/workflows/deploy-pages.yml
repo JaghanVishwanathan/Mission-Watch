@@ -38,8 +38,10 @@ jobs:
       - name: Build GCAT history snapshot
         run: npm run data:history
 
+      # Served from the root of the custom domain (Settings → Pages → Custom domain), so the
+      # base href is '/'. To serve from <user>.github.io/<repo-name>/ instead, use '/<repo-name>/'.
       - name: Build
-        run: npm run build -- --base-href "/${{ github.event.repository.name }}/"
+        run: npm run build -- --base-href /
 
       # GitHub Pages has no SPA rewrites; serve the app shell for unknown paths.
       - name: SPA fallback
