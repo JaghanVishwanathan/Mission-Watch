@@ -195,7 +195,7 @@ const MOBILE_QUERY = '(max-width: 719px), (hover: none) and (pointer: coarse)';
     .chat {
       flex: 1 1 auto;
       width: 100%;
-      min-height: 420px;
+      min-height: var(--chat-min-height, 420px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       background: transparent;

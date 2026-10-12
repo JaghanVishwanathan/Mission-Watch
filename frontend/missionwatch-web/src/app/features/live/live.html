@@ -80,40 +80,70 @@
   <section class="broadcasts" aria-labelledby="broadcasts-title">
     <div class="bar">
       <h2 id="broadcasts-title" class="overline">Broadcasts</h2>
-      @if (consented() && audioSources().length) {
-        <fieldset class="audio">
-          <legend class="overline">Audio</legend>
+      <div class="controls">
+        <fieldset class="seg">
+          <legend class="overline">Layout</legend>
           <label>
             <input
               type="radio"
-              name="audio"
-              value="none"
-              [checked]="audio() === 'none'"
-              (change)="audio.set('none')"
+              name="layout"
+              value="focus"
+              [checked]="layout() === 'focus'"
+              (change)="layout.set('focus')"
             />
-            <span>All muted</span>
+            <span>Focus</span>
           </label>
-          @for (s of audioSources(); track s.id) {
+          <label>
+            <input
+              type="radio"
+              name="layout"
+              value="grid"
+              [checked]="layout() === 'grid'"
+              (change)="layout.set('grid')"
+            />
+            <span>Grid</span>
+          </label>
+        </fieldset>
+        @if (consented() && audioSources().length) {
+          <fieldset class="seg">
+            <legend class="overline">Audio</legend>
             <label>
               <input
                 type="radio"
                 name="audio"
-                [value]="s.id"
-                [checked]="audio() === s.id"
-                (change)="audio.set(s.id)"
+                value="none"
+                [checked]="audio() === 'none'"
+                (change)="audio.set('none')"
               />
-              <span>{{ s.broadcaster }}</span>
+              <span>All muted</span>
             </label>
-          }
-        </fieldset>
-      }
+            @for (s of audioSources(); track s.id) {
+              <label>
+                <input
+                  type="radio"
+                  name="audio"
+                  [value]="s.id"
+                  [checked]="audio() === s.id"
+                  (change)="audio.set(s.id)"
+                />
+                <span>{{ s.broadcaster }}</span>
+              </label>
+            }
+          </fieldset>
+        }
+      </div>
     </div>
 
-    <!-- 2×2 on wide screens: three broadcasts plus the community panel -->
-    <div class="streams">
+    <!--
+      Focus: one main tile and two side tiles; Grid: 2×2 with the community panel.
+      Cards keep their DOM order (moving an iframe reloads it); grid areas place them.
+    -->
+    <div [class]="'streams streams--' + layout()">
       @for (s of streams(); track mission().id + s.id) {
         @let status = statuses()[s.id];
+        @let pos = positionOf(s.id);
         <mw-stream-card
+          [style.grid-area]="areaOf(s.id)"
           [streamId]="s.id"
           [broadcaster]="s.broadcaster"
           [platform]="s.platform"
@@ -121,7 +151,45 @@
           [externalUrl]="s.externalUrl"
           [externalLabel]="s.externalLabel"
           [fixedRatio]="s.kind === 'youtube' || !!s.broadcastId"
+          [fill]="layout() === 'focus' && pos === 0"
         >
+          @if (streams().length > 1) {
+            <div cardActions class="pos-actions">
+              @if (pos > 0) {
+                <button
+                  type="button"
+                  class="pos-btn"
+                  (click)="makeMain(s.id)"
+                  [attr.aria-label]="'Make ' + s.broadcaster + ' the main video'"
+                  title="Make main video"
+                >
+                  <mw-icon name="maximize" [size]="14" />
+                </button>
+              }
+              @if (pos > 1) {
+                <button
+                  type="button"
+                  class="pos-btn"
+                  (click)="move(s.id, -1)"
+                  [attr.aria-label]="'Move ' + s.broadcaster + ' up'"
+                  title="Move up"
+                >
+                  <mw-icon name="arrow-up" [size]="14" />
+                </button>
+              }
+              @if (pos > 0 && pos < streams().length - 1) {
+                <button
+                  type="button"
+                  class="pos-btn"
+                  (click)="move(s.id, 1)"
+                  [attr.aria-label]="'Move ' + s.broadcaster + ' down'"
+                  title="Move down"
+                >
+                  <mw-icon name="arrow-down" [size]="14" />
+                </button>
+              }
+            </div>
+          }
           @if (!consented()) {
             <div class="placeholder">
               <p>{{ s.platform }} content is not loaded.</p>
@@ -147,14 +215,16 @@
         </mw-stream-card>
       }
 
-      <section class="community" aria-labelledby="community-title">
-        <h3 id="community-title">Community</h3>
-        <mw-community-panel
-          [chatSources]="chatSources()"
-          [xDiscussion]="xDiscussion()"
-          [consented]="consented()"
-        />
-      </section>
+      @if (layout() === 'grid') {
+        <section class="community" aria-labelledby="community-title">
+          <h3 id="community-title">Community</h3>
+          <mw-community-panel
+            [chatSources]="chatSources()"
+            [xDiscussion]="xDiscussion()"
+            [consented]="consented()"
+          />
+        </section>
+      }
     </div>
     @if (consented()) {
       <p class="fine">
@@ -189,4 +259,38 @@
     </p>
     <mw-mission-timeline [events]="events()" [currentId]="currentEventId()" />
   </section>
+
+  <!-- Focus layout: community as a floating, minimisable popup -->
+  @if (layout() === 'focus') {
+    <aside id="chat-popup" class="chat-pop" aria-labelledby="chat-pop-title" [hidden]="!chatOpen()">
+      <div class="chat-pop__head">
+        <h3 id="chat-pop-title">Community</h3>
+        <button
+          type="button"
+          class="pos-btn"
+          (click)="chatOpen.set(false)"
+          aria-label="Minimise community chat"
+          aria-controls="chat-popup"
+        >
+          <mw-icon name="minus" [size]="16" />
+        </button>
+      </div>
+      <mw-community-panel
+        [chatSources]="chatSources()"
+        [xDiscussion]="xDiscussion()"
+        [consented]="consented()"
+      />
+    </aside>
+    @if (!chatOpen()) {
+      <button
+        type="button"
+        class="chat-fab"
+        (click)="chatOpen.set(true)"
+        aria-controls="chat-popup"
+        [attr.aria-expanded]="false"
+      >
+        <mw-icon name="chat" [size]="18" /> Chat
+      </button>
+    }
+  }
 </div>

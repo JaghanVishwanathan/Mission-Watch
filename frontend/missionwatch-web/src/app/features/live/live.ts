@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   input,
   linkedSignal,
@@ -30,6 +31,8 @@ import {
   parseYoutubeId,
   safeHttpsUrl,
 } from './live-util';
+import * as layoutOps from './live-layout';
+import { LayoutMode } from './live-layout';
 import { MissionTimeline } from './mission-timeline';
 import { StreamCard } from './stream-card';
 import { XBroadcast } from './x-broadcast';
@@ -199,6 +202,38 @@ export class Live {
   /** 'none' keeps every controllable player muted (muted start-up, SRS §5.3). */
   protected readonly audio = linkedSignal(() => (this.mission(), 'none'));
 
+  // ── Layout: focus (one main + two side tiles, floating chat) or 2×2 grid ──
+  private readonly savedLayout = layoutOps.readLayout();
+  protected readonly layout = signal<LayoutMode>(
+    this.savedLayout.mode === 'grid' ? 'grid' : 'focus',
+  );
+  /** Stream IDs by position; position 0 is the main tile. */
+  protected readonly order = linkedSignal(() =>
+    layoutOps.initialOrder(
+      this.streams().map((s) => s.id),
+      new Set(
+        this.streams()
+          .filter((s) => s.videoId || s.broadcastId || s.postId)
+          .map((s) => s.id),
+      ),
+      this.savedLayout.order,
+    ),
+  );
+  protected readonly chatOpen = signal(!globalThis.matchMedia?.('(max-width: 719px)').matches);
+
+  protected areaOf(id: string): string {
+    return layoutOps.areaOf(this.order(), id);
+  }
+  protected positionOf(id: string): number {
+    return this.order().indexOf(id);
+  }
+  protected makeMain(id: string): void {
+    this.order.update((o) => layoutOps.makeMain(o, id));
+  }
+  protected move(id: string, delta: -1 | 1): void {
+    this.order.update((o) => layoutOps.move(o, id, delta));
+  }
+
   // ── Launch data and timeline ──
   protected readonly launch = rxResource({
     params: () => this.mission().launch,
@@ -307,6 +342,7 @@ export class Live {
   constructor() {
     const tick = setInterval(() => this.now.set(Date.now()), 1000);
     const refresh = setInterval(() => this.launch.reload(), REFRESH_MS);
+    effect(() => layoutOps.writeLayout({ mode: this.layout(), order: this.order() }));
     inject(DestroyRef).onDestroy(() => {
       clearInterval(tick);
       clearInterval(refresh);

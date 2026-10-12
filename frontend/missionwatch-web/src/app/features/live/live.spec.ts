@@ -13,6 +13,7 @@ function setup(
   getLaunch: () => Observable<DataResponse<Launch | null>> = () => of({ data: null, meta: META }),
 ) {
   localStorage.removeItem('mw-live-consent');
+  localStorage.removeItem('mw-live-layout');
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
@@ -60,5 +61,37 @@ describe('Live', () => {
     expect(el.querySelector('mw-mission-timeline')).not.toBeNull();
     expect(el.querySelector('mw-community-panel')).not.toBeNull();
     expect(el.textContent).toContain('Target time not yet known');
+  });
+
+  it('defaults to the focus layout with floating chat, and switches to the grid', async () => {
+    const fixture = setup(() => of({ data: [], meta: META }));
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(el.querySelector('.streams--focus')).not.toBeNull();
+    expect(el.querySelector('aside.chat-pop mw-community-panel')).not.toBeNull();
+    // The configured NASASpaceflight stream has a link, so it takes the main tile.
+    const area = (name: string) =>
+      [...el.querySelectorAll<HTMLElement>('mw-stream-card')].find((c) =>
+        c.textContent?.includes(name),
+      )!.style.gridArea;
+    expect(area('NASASpaceflight')).toContain('main');
+
+    el.querySelector<HTMLButtonElement>('[aria-label="Minimise community chat"]')!.click();
+    await fixture.whenStable();
+    expect(el.querySelector<HTMLElement>('aside.chat-pop')!.hidden).toBe(true);
+    expect(el.querySelector('.chat-fab')).not.toBeNull();
+
+    el.querySelector<HTMLButtonElement>(
+      '[aria-label="Make Everyday Astronaut the main video"]',
+    )!.click();
+    await fixture.whenStable();
+    expect(area('Everyday Astronaut')).toContain('main');
+    expect(JSON.parse(localStorage.getItem('mw-live-layout')!).order[0]).toBe('everyday-astronaut');
+
+    el.querySelector<HTMLInputElement>('input[name="layout"][value="grid"]')!.click();
+    await fixture.whenStable();
+    expect(el.querySelector('.streams--grid .community mw-community-panel')).not.toBeNull();
+    expect(el.querySelector('aside.chat-pop')).toBeNull();
   });
 });

@@ -25,6 +25,7 @@ const STATE_ICON: Record<string, string> = {
           <h3 [id]="headingId()">{{ broadcaster() }}</h3>
           <span class="platform">{{ platform() }}</span>
         </div>
+        <ng-content select="[cardActions]" />
         <span class="state" [class]="'state state--' + s.state.toLowerCase()" role="status">
           @if (s.state === 'LIVE') {
             <span class="dot" aria-hidden="true"></span>
@@ -35,7 +36,7 @@ const STATE_ICON: Record<string, string> = {
         </span>
       </header>
 
-      <div class="frame" [class.frame--auto]="!fixedRatio()">
+      <div class="frame" [class.frame--auto]="!fixedRatio()" [class.frame--fill]="fill()">
         @if (s.state === 'UNAVAILABLE') {
           <div class="fallback">
             <mw-icon name="x-circle" [size]="28" />
@@ -88,6 +89,7 @@ const STATE_ICON: Record<string, string> = {
       min-height: 56px;
     }
     .who {
+      flex: 1 1 auto;
       display: flex;
       align-items: baseline;
       gap: var(--space-2);
@@ -142,6 +144,10 @@ const STATE_ICON: Record<string, string> = {
       background: #000;
       overflow: hidden;
     }
+    /* Main tile: at least 16:9, and grows to the height of the tiles beside it. */
+    .frame--fill {
+      height: 100%;
+    }
     .frame--auto {
       aspect-ratio: auto;
       min-height: 0;
@@ -188,6 +194,8 @@ export class StreamCard {
   readonly externalLabel = input('Watch');
   /** 16:9 video frame; off for X posts, which size themselves. */
   readonly fixedRatio = input(true);
+  /** Stretch the player to the tile's height (main tile in the focus layout). */
+  readonly fill = input(false);
 
   protected readonly headingId = computed(() => `stream-${this.streamId()}`);
   protected readonly label = computed(() => STREAM_STATE_LABEL[this.status().state]);
