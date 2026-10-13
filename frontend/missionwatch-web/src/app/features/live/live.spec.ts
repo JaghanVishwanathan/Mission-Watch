@@ -38,7 +38,7 @@ describe('Live', () => {
 
     const cards = el.querySelectorAll('mw-stream-card');
     expect(cards.length).toBe(3);
-    expect(el.textContent).toContain('Everyday Astronaut');
+    expect(el.textContent).toContain('Spaceflight Now');
     expect(el.textContent).toContain('NASASpaceflight');
     expect(el.textContent).toContain('SpaceX');
     expect(el.querySelector('iframe')).toBeNull();
@@ -70,12 +70,12 @@ describe('Live', () => {
 
     expect(el.querySelector('.streams--focus')).not.toBeNull();
     expect(el.querySelector('aside.chat-pop mw-community-panel')).not.toBeNull();
-    // The configured NASASpaceflight stream has a link, so it takes the main tile.
+    // The first configured stream with a link (Spaceflight Now) takes the main tile.
     const area = (name: string) =>
       [...el.querySelectorAll<HTMLElement>('mw-stream-card')].find((c) =>
         c.textContent?.includes(name),
       )!.style.gridArea;
-    expect(area('NASASpaceflight')).toContain('main');
+    expect(area('Spaceflight Now')).toContain('main');
 
     // Chat starts minimised so it never covers the side videos.
     expect(el.querySelector<HTMLElement>('aside.chat-pop')!.hidden).toBe(true);
@@ -88,11 +88,11 @@ describe('Live', () => {
     expect(el.querySelector('.chat-fab')).not.toBeNull();
 
     el.querySelector<HTMLButtonElement>(
-      '[aria-label="Make Everyday Astronaut the main video"]',
+      '[aria-label="Make NASASpaceflight the main video"]',
     )!.click();
     await fixture.whenStable();
-    expect(area('Everyday Astronaut')).toContain('main');
-    expect(JSON.parse(localStorage.getItem('mw-live-layout')!).order[0]).toBe('everyday-astronaut');
+    expect(area('NASASpaceflight')).toContain('main');
+    expect(JSON.parse(localStorage.getItem('mw-live-layout')!).order[0]).toBe('nasaspaceflight');
 
     el.querySelector<HTMLInputElement>('input[name="layout"][value="grid"]')!.click();
     await fixture.whenStable();

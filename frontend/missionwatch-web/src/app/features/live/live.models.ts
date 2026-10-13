@@ -3,7 +3,7 @@
  * `live-mission.config.ts`, the single file to edit before each launch.
  */
 
-/** A YouTube broadcast panel (Everyday Astronaut, NASASpaceflight…). */
+/** A YouTube broadcast panel (Spaceflight Now, NASASpaceflight, Everyday Astronaut…). */
 export interface YoutubeStreamConfig {
   platform: 'youtube';
   /** Stable key, used for the audio selector and chat switcher. */
