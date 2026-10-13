@@ -46,7 +46,7 @@ export const LIVE_MISSIONS: LiveMissionConfig[] = [
         platform: 'youtube',
         id: 'nasaspaceflight',
         broadcaster: 'NASASpaceflight',
-        video: 'https://www.youtube.com/embed/NZ19nf99NXA',
+        video: 'https://www.youtube.com/embed/_gdbS1AAkq0',
         channelUrl: 'https://www.youtube.com/@NASASpaceflight/live',
       },
       {
