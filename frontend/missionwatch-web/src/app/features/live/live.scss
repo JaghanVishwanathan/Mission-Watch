@@ -210,8 +210,14 @@
     // tiles. Each card has 47px of chrome (44px header + borders), so for main width M, side
     // width S and gap g: M·9/16 = 2·S·9/16 + 47 + g, i.e. M = 2S + 112px (with g = 16px).
     // Main width is also capped so the whole row fits under the header on short, wide screens.
+    // The side column never drops below --side-min (the X player and card header clip below
+    // it); when that applies the main tile gives up the width and letterboxes instead.
+    --side-min: 420px;
     --main-w: min(calc((200% - 2 * var(--space-4) + 112px) / 3), calc((100dvh - 330px) * 16 / 9));
-    grid-template-columns: var(--main-w) calc((var(--main-w) - 112px) / 2);
+    --side-w: max(var(--side-min), calc((var(--main-w) - 112px) / 2));
+    grid-template-columns:
+      min(var(--main-w), calc(100% - var(--space-4) - var(--side-w)))
+      var(--side-w);
     justify-content: center;
     grid-template-areas:
       'main side1'

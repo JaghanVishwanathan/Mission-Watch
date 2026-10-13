@@ -37,7 +37,7 @@ const STATE_ICON: Record<string, string> = {
           } @else {
             <mw-icon [name]="icon()" [size]="13" />
           }
-          {{ label() }}
+          <span class="state-label">{{ label() }}</span>
           @if (s.detail && s.state !== 'UNAVAILABLE') {
             <span class="visually-hidden">: {{ s.detail }}</span>
           }
@@ -76,6 +76,11 @@ const STATE_ICON: Record<string, string> = {
     </article>
   `,
   styles: `
+    :host {
+      display: block;
+      min-width: 0;
+      container-type: inline-size;
+    }
     .card {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
@@ -202,6 +207,17 @@ const STATE_ICON: Record<string, string> = {
     @media (max-width: 480px) {
       .platform {
         display: none;
+      }
+    }
+    /* Narrow tiles: the state shows as its icon only (label kept for screen readers). */
+    @container (max-width: 460px) {
+      .state-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
       }
     }
   `,
