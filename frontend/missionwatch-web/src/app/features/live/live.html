@@ -177,13 +177,17 @@
                   <mw-icon name="arrow-up" [size]="14" />
                 </button>
               }
-              @if (pos > 0 && pos < streams().length - 1) {
+              @if (pos < streams().length - 1) {
                 <button
                   type="button"
                   class="pos-btn"
                   (click)="move(s.id, 1)"
-                  [attr.aria-label]="'Move ' + s.broadcaster + ' down'"
-                  title="Move down"
+                  [attr.aria-label]="
+                    pos === 0
+                      ? 'Move ' + s.broadcaster + ' out of the main view'
+                      : 'Move ' + s.broadcaster + ' down'
+                  "
+                  [attr.title]="pos === 0 ? 'Move to side' : 'Move down'"
                 >
                   <mw-icon name="arrow-down" [size]="14" />
                 </button>
