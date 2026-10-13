@@ -7,7 +7,8 @@ import { LiveMissionConfig } from './live.models';
  *
  * Every embed link used by the /live page lives here and nowhere else.
  * Before a launch, update:
- *   1. `video` for Everyday Astronaut and NASASpaceflight. Paste the YouTube
+ *   1. `video` for each YouTube broadcaster (currently Spaceflight Now and
+ *      NASASpaceflight; swap a broadcaster in or out as needed). Paste the YouTube
  *      URL, the 11-character video ID, or YouTube's whole <iframe> embed code.
  *   2. `broadcastUrl` for SpaceX: the x.com/i/broadcasts/… link, or X's whole
  *      <blockquote class="twitter-broadcast"> embed code. Without a broadcast,
@@ -34,11 +35,12 @@ export const LIVE_MISSIONS: LiveMissionConfig[] = [
     },
     streams: [
       {
+        // Replaces Everyday Astronaut, who is not streaming this launch.
         platform: 'youtube',
-        id: 'everyday-astronaut',
-        broadcaster: 'Everyday Astronaut',
-        video: '',
-        channelUrl: 'https://www.youtube.com/@EverydayAstronaut/live',
+        id: 'spaceflight-now',
+        broadcaster: 'Spaceflight Now',
+        video: 'https://www.youtube.com/embed/NZ19nf99NXA',
+        channelUrl: 'https://www.youtube.com/@SpaceflightNowVideo/live',
       },
       {
         platform: 'youtube',

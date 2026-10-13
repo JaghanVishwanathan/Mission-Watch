@@ -69,7 +69,7 @@ export class DataSources {
       limitations: 'Requires an API key, which must stay on the server (Phase 4).',
     },
     {
-      name: 'YouTube (Everyday Astronaut, NASASpaceflight)',
+      name: 'YouTube (Spaceflight Now, NASASpaceflight)',
       url: 'https://www.youtube.com',
       use: 'Embedded livestreams and Live Chat on the Live Mission Control page',
       refresh: 'Real time, through the official YouTube player',
