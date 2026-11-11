@@ -1,4 +1,4 @@
-import { Launch, LaunchQuery } from '../models';
+import { Launch, LaunchQuery, UPCOMING_STATUSES } from '../models';
 
 const DAY_MS = 86_400_000;
 
@@ -60,4 +60,16 @@ export function sortLaunches(launches: readonly Launch[], query: LaunchQuery): L
 
 export function queryLaunches(launches: readonly Launch[], query: LaunchQuery): Launch[] {
   return sortLaunches(filterLaunches(launches, query), query);
+}
+
+const FEATURED_COUNT = 6;
+
+/**
+ * "Featured" is a presentation heuristic, not a source flag: upcoming launches that are not
+ * routine constellation deployments, falling back to the next launches. Shared by every adapter.
+ */
+export function pickFeatured(launches: readonly Launch[]): Launch[] {
+  const upcoming = queryLaunches(launches, { statuses: [...UPCOMING_STATUSES], sort: 'time' });
+  const notable = upcoming.filter((l) => l.category && l.category !== 'communications');
+  return (notable.length >= 3 ? notable : upcoming).slice(0, FEATURED_COUNT);
 }

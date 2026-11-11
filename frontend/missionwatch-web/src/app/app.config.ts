@@ -6,8 +6,9 @@ import {
   withComponentInputBinding,
   withInMemoryScrolling,
 } from '@angular/router';
+import { environment } from '../environments/environment';
 import { routes } from './app.routes';
-import { provideLiveLaunchData } from './core/data/ll2/live-launch-data.service';
+import { provideLaunchData } from './core/data/provide-launch-data';
 import { MissionWatchTitleStrategy } from './core/title-strategy';
 
 export const appConfig: ApplicationConfig = {
@@ -20,8 +21,8 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
     ),
     { provide: TitleStrategy, useClass: MissionWatchTitleStrategy },
-    // Live sources: Launch Library 2 (launches) + GCAT snapshot (history).
-    // Swap for provideMockLaunchData() to work offline with the demo dataset.
-    provideLiveLaunchData(),
+    // Launch data source per build: Launch Library 2 directly (default), the MissionWatch API
+    // (`npm run start:backend`) or the demo dataset. See src/environments.
+    provideLaunchData(environment),
   ],
 };

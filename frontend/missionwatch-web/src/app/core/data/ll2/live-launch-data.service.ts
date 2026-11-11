@@ -18,13 +18,12 @@ import { CachedResult, RequestCache } from '../cache/request-cache';
 import { DataSourceError, describeError } from '../errors';
 import { HistoryRepository } from '../history/history-repository';
 import { LAUNCH_DATA, LaunchDataSource } from '../launch-data-source';
-import { queryLaunches } from '../launch-query';
+import { pickFeatured, queryLaunches } from '../launch-query';
 import { mapLaunch, mapLaunchPage, MappedPage } from './ll2-mapper';
 import { Ll2Launch, Ll2Page } from './ll2-types';
 
 export const LL2_SOURCE = 'Launch Library 2';
 const LL2_SOURCE_URL = 'https://thespacedevs.com/llapi';
-const FEATURED_COUNT = 6;
 
 type Settled<T> = { ok: true; result: CachedResult<T> } | { ok: false; error: DataSourceError };
 
@@ -65,22 +64,8 @@ export class LiveLaunchDataService implements LaunchDataSource {
     );
   }
 
-  /**
-   * "Featured" is a presentation heuristic, not a source flag: upcoming launches that
-   * are not routine constellation deployments, falling back to the next launches.
-   */
   getFeatured(): Observable<DataResponse<Launch[]>> {
-    return this.upcoming().pipe(
-      map((r) => {
-        const upcoming = queryLaunches(r.value.launches, {
-          statuses: [...UPCOMING_STATUSES],
-          sort: 'time',
-        });
-        const notable = upcoming.filter((l) => l.category && l.category !== 'communications');
-        const picked = (notable.length >= 3 ? notable : upcoming).slice(0, FEATURED_COUNT);
-        return this.respond(picked, [r]);
-      }),
-    );
+    return this.upcoming().pipe(map((r) => this.respond(pickFeatured(r.value.launches), [r])));
   }
 
   search(query: LaunchQuery): Observable<DataResponse<Launch[]>> {

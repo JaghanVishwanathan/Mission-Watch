@@ -1,0 +1,48 @@
+{
+  "$schema": "./live-missions.schema.json",
+  "_help": [
+    "LIVE MISSION CONTROL: edit this file before each launch. Full guide: docs/live-streams.md",
+    "1. youtube streams: paste the YouTube URL, the 11-character video ID, or YouTube's whole <iframe> embed code into 'video'.",
+    "2. x stream: paste the x.com/i/broadcasts/... link (or X's <blockquote> embed code) into 'broadcastUrl'. Without a broadcast, 'postUrl' embeds a post instead.",
+    "3. Optional: set launch.ll2LaunchId to pin a launch; otherwise the page follows the next launch from launch.nextFromProvider.",
+    "Empty values are fine: a panel without a link shows 'Unavailable' with a button to the broadcaster's channel.",
+    "The first mission is shown by default; add more missions to get a mission selector."
+  ],
+  "missions": [
+    {
+      "id": "next-spacex",
+      "name": "",
+      "vehicle": "",
+      "launch": {
+        "ll2LaunchId": "",
+        "nextFromProvider": "SpaceX",
+        "fallbackT0": ""
+      },
+      "streams": [
+        {
+          "platform": "youtube",
+          "id": "spaceflight-now",
+          "broadcaster": "Spaceflight Now",
+          "video": "https://www.youtube.com/embed/qYXjwonSquQ",
+          "channelUrl": "https://www.youtube.com/@SpaceflightNowVideo/live"
+        },
+        {
+          "platform": "youtube",
+          "id": "nasaspaceflight",
+          "broadcaster": "NASASpaceflight",
+          "video": "https://www.youtube.com/embed/_gdbS1AAkq0",
+          "channelUrl": "https://www.youtube.com/@NASASpaceflight/live"
+        },
+        {
+          "platform": "x",
+          "id": "spacex",
+          "broadcaster": "SpaceX",
+          "postUrl": "",
+          "broadcastUrl": "https://x.com/i/broadcasts/1aJbdEzoAvYKX",
+          "profileUrl": "https://x.com/SpaceX"
+        }
+      ],
+      "events": []
+    }
+  ]
+}

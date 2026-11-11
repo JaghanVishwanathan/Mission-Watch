@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { provideEchartsCore } from 'ngx-echarts';
 import { Shell } from './layout/shell';
 import { PLANNED } from './features/placeholder/planned-features';
+import { liveConfigResolver } from './features/live/live-config';
 
 const placeholder = () => import('./features/placeholder/placeholder').then((m) => m.Placeholder);
 
@@ -41,6 +42,8 @@ export const routes: Routes = [
       {
         path: 'live',
         title: 'Live Mission Control',
+        // Stream links come from public/config/live-missions.json, loaded before the page opens.
+        resolve: { liveConfig: liveConfigResolver },
         loadComponent: () => import('./features/live/live').then((m) => m.Live),
       },
       {

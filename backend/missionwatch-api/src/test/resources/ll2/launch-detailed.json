@@ -1,0 +1,72 @@
+{
+  "id": "97c6f5e1-299e-4652-b72d-9618ac047076",
+  "name": "Falcon 9 Block 5 | Starlink Group 15-25",
+  "status": { "id": 1, "name": "Go for Launch", "abbrev": "Go" },
+  "last_updated": "2026-10-12T12:57:26Z",
+  "net": "2026-10-13T00:11:47Z",
+  "net_precision": { "id": 0, "name": "Second", "abbrev": "SEC" },
+  "window_start": "2026-10-12T23:00:00Z",
+  "window_end": "2026-10-13T03:00:00Z",
+  "image": {
+    "image_url": "https://example.org/full.jpg",
+    "thumbnail_url": "https://example.org/thumb.jpg",
+    "credit": "SpaceX",
+    "license": { "name": "CC BY-NC 2.0", "link": "https://creativecommons.org/licenses/by-nc/2.0/" }
+  },
+  "launch_service_provider": {
+    "id": 121,
+    "name": "SpaceX",
+    "abbrev": "SpX",
+    "type": { "name": "Commercial" },
+    "country": [{ "alpha_2_code": "US" }]
+  },
+  "rocket": {
+    "configuration": {
+      "id": 164,
+      "name": "Falcon 9",
+      "full_name": "Falcon 9 Block 5",
+      "families": [{ "name": "Falcon" }],
+      "reusable": true,
+      "length": 70,
+      "diameter": 3.65,
+      "leo_capacity": 22800,
+      "max_stage": 2
+    }
+  },
+  "mission": {
+    "name": "Starlink Group 15-25",
+    "type": "Communications",
+    "description": "A batch of 27 satellites.",
+    "orbit": { "name": "Low Earth Orbit", "celestial_body": { "name": "Earth" } },
+    "agencies": [{ "name": "SpaceX" }]
+  },
+  "pad": {
+    "id": 16,
+    "name": "Space Launch Complex 4E",
+    "latitude": 34.632,
+    "longitude": "-120.611",
+    "country": { "alpha_2_code": "US" },
+    "location": { "name": "Vandenberg SFB, CA, USA" }
+  },
+  "timeline": [
+    { "type": { "id": 2, "abbrev": "Liftoff", "description": "Up" }, "relative_time": "PT0S" },
+    { "type": { "id": 1, "abbrev": "GO for Prop Load" }, "relative_time": "-PT38M" },
+    { "type": { "id": 3, "abbrev": "SECO-1" }, "relative_time": "PT8M39S" }
+  ],
+  "updates": [
+    { "id": 1, "comment": "Added launch.", "created_on": "2026-09-19T23:07:00Z", "created_by": "x" },
+    {
+      "id": 2,
+      "comment": "Now targeting Oct 13 at 00:11 UTC",
+      "created_on": "2026-10-12T00:28:00Z",
+      "info_url": "https://www.spacex.com/launches/sl-15-25"
+    }
+  ],
+  "info_urls": [{ "title": "SpaceX", "url": "https://www.spacex.com/", "priority": 10 }],
+  "vid_urls": [
+    { "title": "Low priority stream", "url": "https://youtube.com/a", "priority": 1 },
+    { "title": "Official webcast", "url": "https://x.com/spacex", "priority": 9 }
+  ],
+  "flightclub_url": "https://flightclub.io/result?llId=1",
+  "some_field_mission_watch_ignores": { "nested": true }
+}

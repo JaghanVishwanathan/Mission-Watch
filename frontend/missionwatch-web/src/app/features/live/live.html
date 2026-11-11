@@ -20,7 +20,7 @@
           <a [routerLink]="['/launches', launch.id]">Mission details</a>
         }
       </p>
-      @if (missions.length > 1) {
+      @if (missions().length > 1) {
         <label class="selector">
           <span class="overline">Mission</span>
           <select
@@ -28,7 +28,7 @@
             [value]="mission().id"
             (change)="selectMission($any($event.target).value)"
           >
-            @for (m of missions; track m.id) {
+            @for (m of missions(); track m.id) {
               <option [value]="m.id">{{ m.name || m.id }}</option>
             }
           </select>
@@ -77,6 +77,18 @@
   }
 
   <!-- Broadcasts -->
+  <!-- Problems in public/config/live-missions.json; valid parts are still used -->
+  @if (configProblems().length) {
+    <div class="warn-box config-problems" role="status">
+      <p>Some stream settings could not be used:</p>
+      <ul>
+        @for (p of configProblems(); track $index) {
+          <li>{{ p }}</li>
+        }
+      </ul>
+    </div>
+  }
+
   <section class="broadcasts" aria-labelledby="broadcasts-title">
     <div class="bar">
       <h2 id="broadcasts-title" class="overline">Broadcasts</h2>

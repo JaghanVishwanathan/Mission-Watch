@@ -20,7 +20,7 @@ import { FreshnessIndicator } from '../../shared/ui/freshness-indicator';
 import { Icon } from '../../shared/ui/icon';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { CommunityPanel, ChatSource, XDiscussion } from './community-panel';
-import { LIVE_MISSIONS } from './live-mission.config';
+import { FALLBACK_MISSION, LiveConfig } from './live-config';
 import { LiveMissionConfig, StreamStatus } from './live.models';
 import {
   buildTimeline,
@@ -158,9 +158,13 @@ export class Live {
   /** `?mission=` query parameter. */
   readonly missionParam = input<string>(undefined, { alias: 'mission' });
 
-  protected readonly missions = LIVE_MISSIONS;
+  /** Resolved by the route from public/config/live-missions.json (see live-config.ts). */
+  readonly liveConfig = input<LiveConfig>({ missions: [FALLBACK_MISSION], problems: [] });
+
+  protected readonly missions = computed(() => this.liveConfig().missions);
+  protected readonly configProblems = computed(() => this.liveConfig().problems);
   protected readonly mission = computed(
-    () => LIVE_MISSIONS.find((m) => m.id === this.missionParam()) ?? LIVE_MISSIONS[0],
+    () => this.missions().find((m) => m.id === this.missionParam()) ?? this.missions()[0],
   );
 
   // ── Consent (NFR-008): nothing from YouTube or X loads until the viewer allows it ──
