@@ -99,6 +99,20 @@ describe('LiveLaunchDataService', () => {
     expect(last.meta.warnings.join(' ')).toContain('summary is shown');
   });
 
+  it('keeps the saved summary when LL2 no longer has the full record', async () => {
+    const upcoming = firstValueFrom(data.getUpcoming());
+    http.expectOne(isList('upcoming')).flush(page([ll2('gone', '2030-01-01T00:00:00Z')]));
+    await upcoming;
+
+    const emissions = firstValueFrom(data.getLaunch('gone').pipe(toArray()));
+    http
+      .expectOne(`${LL2_BASE_URL}/launches/gone/?mode=detailed`)
+      .flush({ detail: 'Not found.' }, { status: 404, statusText: 'Not Found' });
+    const last = (await emissions).at(-1)!;
+    expect(last.data?.id).toBe('gone');
+    expect(last.meta.warnings.join(' ')).toContain('no longer has a full record');
+  });
+
   it('reports an unknown launch as not found', async () => {
     const result = firstValueFrom(data.getLaunch('missing'));
     http

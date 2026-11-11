@@ -116,7 +116,17 @@ export class LiveLaunchDataService implements LaunchDataSource {
       .pipe(
         map((r): DataResponse<Launch | null> => this.respond(r.value, [r])),
         catchError((error: DataSourceError) => {
-          if (error.kind === 'not-found') return of(this.respond(null, []));
+          if (error.kind === 'not-found') {
+            // LL2 sometimes removes or merges a launch record while it is still in a saved list.
+            // Keep showing what is known, and say why, rather than switching to "not found".
+            return of(
+              summary
+                ? summaryResponse(
+                    'Launch Library 2 no longer has a full record for this launch. It may have been removed or merged into another record, so the last saved summary is shown.',
+                  )
+                : this.respond(null, []),
+            );
+          }
           if (summary) {
             return of(
               summaryResponse(
