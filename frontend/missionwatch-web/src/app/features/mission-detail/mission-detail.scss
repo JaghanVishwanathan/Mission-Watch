@@ -416,3 +416,14 @@
     gap: var(--space-1);
   }
 }
+
+.globe-link {
+  margin-top: var(--space-3);
+  font-size: var(--fs-sm);
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+}

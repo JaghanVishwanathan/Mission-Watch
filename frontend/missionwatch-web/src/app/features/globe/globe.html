@@ -1,0 +1,260 @@
+<div class="page globe">
+  <mw-page-header
+    eyebrow="Geospatial exploration"
+    title="Mission Globe"
+    subtitle="Launch sites around the world. Select a site or a launch, then follow its milestones in Story mode."
+  >
+    <div class="seg" role="group" aria-label="Launches shown">
+      <button
+        type="button"
+        class="btn"
+        [attr.aria-pressed]="mode() === 'upcoming'"
+        (click)="setMode('upcoming')"
+      >
+        Upcoming
+      </button>
+      <button
+        type="button"
+        class="btn"
+        [attr.aria-pressed]="mode() === 'recent'"
+        (click)="setMode('recent')"
+      >
+        Recent
+      </button>
+    </div>
+  </mw-page-header>
+
+  <div class="layout">
+    <!-- 3D view. Everything here is also reachable from the panel. -->
+    <section class="stage" aria-label="3D globe">
+      <div
+        #canvas
+        class="canvas"
+        role="img"
+        aria-label="3D globe of launch sites. Use the panel to browse sites and launches by keyboard."
+      ></div>
+      @if (globeState() === 'loading') {
+        <div class="overlay" aria-hidden="true"><mw-skeleton height="100%" /></div>
+      }
+      @if (globeState() === 'unavailable') {
+        <div class="overlay notice" role="status">
+          <mw-icon name="globe" [size]="28" />
+          <p>The 3D globe can't be shown on this device (WebGL is unavailable).</p>
+          <p class="muted">Every site and launch is still listed in the panel.</p>
+        </div>
+      }
+      <p class="legend">
+        <span><span class="dot" aria-hidden="true"></span> Launch site</span>
+        @if (path()) {
+          <span><span class="dash" aria-hidden="true"></span> {{ illustrativeLabel }}</span>
+        }
+      </p>
+    </section>
+
+    <!-- Panel -->
+    <aside class="panel side" aria-label="Sites and launches">
+      @if (selectedLaunch(); as l) {
+        <!-- Selected launch -->
+        <section class="card" aria-labelledby="sel-title">
+          <div class="card-head">
+            <button
+              type="button"
+              class="btn btn--icon"
+              (click)="clearSelection()"
+              aria-label="Back to all sites"
+            >
+              <mw-icon name="arrow-left" [size]="16" />
+            </button>
+            <mw-status-badge [status]="l.status" />
+          </div>
+          <h2 id="sel-title">{{ l.missionName }}</h2>
+          <p class="muted">{{ l.rocket.name }} · {{ l.provider.name }}</p>
+          <p class="muted">{{ l.site.name }}, {{ l.site.location }}</p>
+          <p>
+            <time [attr.datetime]="l.scheduledTime">{{
+              formatLaunchTime(l.scheduledTime, l.timePrecision)
+            }}</time>
+          </p>
+          @if (mode() === 'upcoming' && !l.timePrecision) {
+            <mw-countdown [target]="l.scheduledTime" [compact]="true" />
+          }
+          <div class="actions">
+            <a class="btn" [routerLink]="['/launches', l.id]">Mission details</a>
+            <button
+              type="button"
+              class="btn btn--primary"
+              [attr.aria-pressed]="story()"
+              (click)="setStory(!story())"
+            >
+              {{ story() ? 'Close story mode' : 'Story mode' }}
+            </button>
+          </div>
+          @if (!path()) {
+            <p class="note">
+              No path is drawn: the destination orbit
+              {{ l.payload?.orbit ? '(' + l.payload?.orbit + ') ' : '' }}isn't one MissionWatch can
+              illustrate honestly.
+            </p>
+          }
+        </section>
+
+        @if (story()) {
+          <!-- Mission Story Mode (FR-05) -->
+          <section
+            class="story"
+            aria-labelledby="story-title"
+            tabindex="0"
+            (keydown)="onStoryKey($event)"
+          >
+            <h3 id="story-title" class="overline">Story mode</h3>
+            @if (detail.isLoading() && !stops().length) {
+              <mw-skeleton height="120px" />
+            } @else if (stops().length) {
+              <p class="muted small">
+                Milestones published for this mission. Use the arrow keys or the buttons to step
+                through them.
+                @if (path()) {
+                  The marker moves along an illustrative path, not a computed trajectory.
+                }
+              </p>
+              <ol class="steps">
+                @for (s of stops(); track s.id; let i = $index) {
+                  <li>
+                    <button
+                      type="button"
+                      class="step"
+                      [class.step--current]="i === stepIndex()"
+                      [attr.aria-current]="i === stepIndex() ? 'step' : null"
+                      (click)="goToStep(i)"
+                    >
+                      <span class="offset mono">{{
+                        s.offsetSeconds !== undefined ? formatOffset(s.offsetSeconds) : '—'
+                      }}</span>
+                      <span class="step-body">
+                        <span class="step-title">{{ s.name }}</span>
+                        @if (i === stepIndex() && s.description) {
+                          <span class="step-desc">{{ s.description }}</span>
+                        }
+                        <span class="step-time">
+                          @if (s.plannedAt) {
+                            Planned
+                            <time [attr.datetime]="s.plannedAt">{{
+                              s.plannedAt | date: 'MMM d, HH:mm:ss'
+                            }}</time>
+                          } @else if (s.offsetSeconds === undefined) {
+                            Time not published
+                          } @else {
+                            Exact time depends on the final launch time
+                          }
+                          @if (s.estimated) {
+                            · estimated
+                          }
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ol>
+              <div class="actions">
+                <button
+                  type="button"
+                  class="btn"
+                  [disabled]="stepIndex() === 0"
+                  (click)="goToStep(stepIndex() - 1)"
+                >
+                  <mw-icon name="arrow-left" [size]="14" /> Previous
+                </button>
+                <span class="muted small" aria-live="polite"
+                  >Step {{ stepIndex() + 1 }} of {{ stops().length }}</span
+                >
+                <button
+                  type="button"
+                  class="btn"
+                  [disabled]="stepIndex() === stops().length - 1"
+                  (click)="goToStep(stepIndex() + 1)"
+                >
+                  Next <mw-icon name="arrow-right" [size]="14" />
+                </button>
+              </div>
+            } @else {
+              <p class="muted">No milestones have been published for this mission yet.</p>
+            }
+            @if (flightClub(); as fc) {
+              <p class="small">
+                For a computed trajectory, see the
+                <a [href]="fc" target="_blank" rel="noopener noreferrer"
+                  >Flight Club simulation <mw-icon name="external" [size]="12"
+                /></a>
+              </p>
+            }
+          </section>
+        }
+      } @else {
+        <!-- Browse -->
+        <label class="search">
+          <span class="visually-hidden">Filter by mission, provider or rocket</span>
+          <input
+            class="input"
+            type="search"
+            placeholder="Filter by mission, provider or rocket"
+            [value]="text()"
+            (input)="setText($any($event.target).value)"
+          />
+        </label>
+
+        @if (list.isLoading() && !list.hasValue()) {
+          <mw-skeleton height="56px" />
+          <mw-skeleton height="56px" />
+          <mw-skeleton height="56px" />
+        } @else if (listError(); as err) {
+          <mw-error-state [message]="err" (retry)="list.reload()" />
+        } @else if (!grouping().sites.length) {
+          <mw-empty-state
+            title="No launch sites to show"
+            [message]="text() ? 'No launches match this filter.' : 'No launches with known sites.'"
+          />
+        } @else {
+          @if (list.hasValue()) {
+            <mw-freshness [meta]="list.value().meta" />
+          }
+          @if (grouping().withoutCoordinates; as missing) {
+            <p class="note">
+              {{ missing }} launch{{ missing === 1 ? ' is' : 'es are' }} not shown: the source gives
+              no coordinates for {{ missing === 1 ? 'its' : 'their' }} site.
+            </p>
+          }
+          <ul class="sites">
+            @for (s of grouping().sites; track s.id) {
+              <li>
+                <button
+                  type="button"
+                  class="site"
+                  [attr.aria-expanded]="s.id === selectedSiteId()"
+                  (click)="selectSite(s.id)"
+                >
+                  <span class="site-name">{{ s.name }}</span>
+                  <span class="muted small">{{ s.location }}</span>
+                  <span class="count">{{ s.launches.length }}</span>
+                </button>
+                @if (s.id === selectedSiteId()) {
+                  <ul class="launches">
+                    @for (l of s.launches; track l.id) {
+                      <li>
+                        <button type="button" class="launch" (click)="selectLaunch(l.id)">
+                          <span>{{ l.missionName }}</span>
+                          <span class="muted small">{{
+                            formatLaunchTime(l.scheduledTime, l.timePrecision)
+                          }}</span>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                }
+              </li>
+            }
+          </ul>
+        }
+      }
+    </aside>
+  </div>
+</div>

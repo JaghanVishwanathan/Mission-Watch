@@ -23,10 +23,25 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "allowedCommonJsDependencies": [
+              "mersenne-twister",
+              "urijs",
+              "protobufjs",
+              "protobufjs/dist/minimal/protobuf.js",
+              "lerc",
+              "bitmap-sdf",
+              "grapheme-splitter",
+              "nosleep.js"
+            ],
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "{Assets,Workers,ThirdParty,Widgets}/**/*",
+                "input": "node_modules/cesium/Build/Cesium",
+                "output": "cesium"
               }
             ],
             "styles": [

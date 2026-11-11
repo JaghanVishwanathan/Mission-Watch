@@ -17,9 +17,9 @@ interface NavItem {
 export const PRIMARY_NAV: NavItem[] = [
   { label: 'Live', path: '/live', live: true },
   { label: 'Launches', path: '/launches' },
+  { label: 'Globe', path: '/globe' },
   { label: 'Analytics', path: '/analytics' },
-  // Hidden until these features ship; the routes still exist.
-  // { label: 'Globe', path: '/globe' },
+  // Hidden until this feature ships; the route still exists.
   // { label: 'Intelligence', path: '/intelligence' },
 ];
 

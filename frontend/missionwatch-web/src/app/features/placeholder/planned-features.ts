@@ -1,24 +1,6 @@
 import { PlannedFeature } from './placeholder';
 
-export const PLANNED: Record<
-  'globe' | 'intelligence' | 'watchlist' | 'notifications',
-  PlannedFeature
-> = {
-  globe: {
-    eyebrow: 'Geospatial exploration',
-    title: 'Mission Globe',
-    summary: 'An interactive 3D globe for exploring launch sites, destinations and mission paths.',
-    phase: 'Phase 3',
-    requirement: 'FR-04, FR-05',
-    icon: 'globe',
-    capabilities: [
-      'Rotate and zoom a CesiumJS globe, loaded only when you open this page',
-      'Launch-site markers that open mission details',
-      'Filter the missions shown on the globe',
-      'Trajectories from real data where it exists, and clearly labelled illustrative paths where it does not',
-      'Mission Story Mode, with a milestone timeline kept in sync with the map',
-    ],
-  },
+export const PLANNED: Record<'intelligence' | 'watchlist' | 'notifications', PlannedFeature> = {
   intelligence: {
     eyebrow: 'Evidence-based analytics',
     title: 'Launch Intelligence',

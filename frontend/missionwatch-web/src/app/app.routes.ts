@@ -49,8 +49,8 @@ export const routes: Routes = [
       {
         path: 'globe',
         title: 'Mission Globe',
-        loadComponent: placeholder,
-        data: { feature: PLANNED.globe },
+        // CesiumJS loads only from inside this chunk, when the globe is first shown.
+        loadComponent: () => import('./features/globe/globe').then((m) => m.Globe),
       },
       {
         path: 'intelligence',

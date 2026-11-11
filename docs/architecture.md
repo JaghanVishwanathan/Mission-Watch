@@ -61,6 +61,8 @@ frontend/missionwatch-web/
     ├── shared/ui/             Reusable presentational components
     ├── layout/                App shell
     └── features/              One lazy-loaded route per primary page (SRS §10.2)
+        └── globe/             Mission Globe and Story Mode: page, pure geometry (globe-util),
+                               renderer interface, and the only CesiumJS import
 ```
 
 ### Key decisions
@@ -77,6 +79,10 @@ frontend/missionwatch-web/
 | Date precision is preserved, and countdowns show only for exact times | LL2 often knows only the day or month. Inventing an hour and minute would misinform. |
 | `DataResponse<T>` wraps every payload with `DataMeta` (source, refresh time, stale flag, warnings) | Freshness and provenance are visible wherever data is shown (SRS §5.7, §8.2). |
 | Every feature route is lazy-loaded, and ECharts loads only in the analytics chunk | NFR-01 performance. |
+| CesiumJS sits behind a `GlobeRenderer` interface (`features/globe/globe-renderer.ts`); only `cesium-globe-renderer.ts` imports it, through a dynamic import | Cesium (~0.9 MB gzipped) loads only when the globe is shown. The page and its tests work against the interface, using a fake renderer in jsdom. If WebGL is unavailable, the site list still works. |
+| The globe uses Cesium's bundled Natural Earth II imagery, with no Cesium ion | No account, token or third-party map requests, and nothing secret in the frontend. |
+| Ascent paths are drawn from the orbit label (polar/SSO, low Earth orbit, eastward high orbits) and always labelled "illustrative" | LL2 publishes no trajectories. Showing direction helps understanding, but the path must never look like computed orbital mechanics (FR-04). Unknown orbits get no path. Flight Club is linked when LL2 has a simulation. |
+| Story mode uses only the mission's own LL2 milestones; absolute times are shown only when the launch time is exact | FR-05: no invented events or false precision. |
 
 ### Known limits of the browser-only mode
 
@@ -131,7 +137,7 @@ com.jaghan.missionwatch
 |---|---|---|
 | 1 | Frontend foundation | Done |
 | 2 | Real data integration (Launch Library 2, NASA media, GCAT history) | Done |
-| 3 | Interactive globe (CesiumJS), Mission Story Mode | Planned |
+| 3 | Interactive globe (CesiumJS), Mission Story Mode | Done |
 | 4 | Spring Boot backend, MySQL, Flyway | Done (hosting in Phase 8) |
 | 5 | Historical data pipeline, schedule snapshots | Planned |
 | 6 | Data science and ML (gated on data sufficiency) | Planned |

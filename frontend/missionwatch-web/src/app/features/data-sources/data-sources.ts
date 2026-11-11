@@ -50,6 +50,16 @@ export class DataSources {
         'Providers are recorded as launch agencies, which differ from Launch Library 2 names. Success means propulsive success into orbit.',
     },
     {
+      name: 'CesiumJS with Natural Earth II imagery',
+      url: 'https://cesium.com/platform/cesiumjs/',
+      use: 'The 3D Mission Globe and its basemap',
+      refresh: 'Bundled with the site; no external map requests',
+      status: 'Live',
+      license: 'CesiumJS: Apache 2.0. Natural Earth: public domain.',
+      limitations:
+        'Low-resolution world imagery, suited to locating launch sites rather than detailed maps. Ascent paths on the globe are illustrative, not computed trajectories.',
+    },
+    {
       name: 'NASA Image and Video Library',
       url: 'https://images.nasa.gov',
       use: 'Related imagery on mission pages',

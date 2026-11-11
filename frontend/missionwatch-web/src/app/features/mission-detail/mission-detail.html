@@ -165,6 +165,15 @@
             } @else {
               <p class="unavailable">No timeline has been published for this mission.</p>
             }
+            <p class="globe-link">
+              <a
+                [routerLink]="['/globe']"
+                [queryParams]="{ launch: l.id, story: l.milestones?.length ? '1' : null }"
+              >
+                <mw-icon name="globe" [size]="14" />
+                {{ l.milestones?.length ? 'Follow the milestones on the globe' : 'View on globe' }}
+              </a>
+            </p>
           </section>
 
           <!-- Updates -->
