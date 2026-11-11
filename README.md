@@ -2,7 +2,7 @@
 
 **Space mission intelligence platform.** Explore upcoming and historical rocket launches, follow how launch schedules change over time and investigate evidence-based launch analytics.
 
-> **Status: Phase 2 (real data).** Launches come live from [Launch Library 2](https://thespacedevs.com/llapi), mission imagery from the [NASA Image and Video Library](https://images.nasa.gov), and historical statistics from Jonathan McDowell's [GCAT](https://planet4589.org/space/gcat) (CC BY 4.0). The backend arrives in Phase 4.
+> **Status: Phase 4 (backend).** Launches come live from [Launch Library 2](https://thespacedevs.com/llapi), mission imagery from the [NASA Image and Video Library](https://images.nasa.gov), and historical statistics from Jonathan McDowell's [GCAT](https://planet4589.org/space/gcat) (CC BY 4.0). The Spring Boot API stores launches and their schedule history in PostgreSQL. The public site reads LL2 directly until the API is hosted in Phase 8.
 
 ## Highlights
 
@@ -21,33 +21,43 @@
 |---|---|
 | Frontend | Angular 22 (standalone, zoneless, signals, `rxResource`), TypeScript, RxJS, SCSS design tokens, Apache ECharts, Vitest |
 | Data sources | Launch Library 2 (live), NASA Image and Video Library (live), GCAT (build-time snapshot) |
-| Backend (Phase 4) | Java, Spring Boot, Spring Data JPA, Spring Security, Flyway, PostgreSQL |
+| Backend | Java 25, Spring Boot 4.1 (Web MVC, Data JPA, Security, Validation, Actuator), Flyway, PostgreSQL 18, Caffeine, OpenAPI, Testcontainers, ArchUnit |
 | Data science (Phases 5–6) | Python, pandas, scikit-learn, XGBoost, SHAP, FastAPI |
-| CI/CD | GitHub Actions, GitHub Pages |
+| CI/CD | GitHub Actions (frontend CI, backend CI, Pages deploy), Docker |
 
 ## Repository layout
 
 ```text
 frontend/missionwatch-web/   Angular application
-backend/missionwatch-api/    Spring Boot API (planned)
+backend/missionwatch-api/    Spring Boot API
 data-science/                Pipeline, notebooks and models (planned)
-docs/                        SRS, architecture, API
-deployment/docker/           Container definitions (planned)
+docs/                        SRS, architecture, API, guides
+deployment/docker/           Docker Compose for PostgreSQL and the API
 .github/workflows/           CI and Pages deployment
 ```
 
 ## Getting started
 
-Prerequisite: Node.js 24 LTS (or 22.22+).
+Prerequisites: Node.js 24 LTS. For the backend also JDK 25 and Docker.
 
 ```bash
 cd frontend/missionwatch-web
 npm ci
 npm run data:history    # download GCAT and build public/data/launch-history.json (needed for Analytics)
-npm start               # http://localhost:4200
+npm start               # http://localhost:4200, reads Launch Library 2 directly
 npm test -- --watch=false
 npm run build
 ```
+
+With the backend ([details](backend/missionwatch-api/README.md)):
+
+```bash
+docker compose -f deployment/docker/compose.yaml up -d postgres
+cd backend/missionwatch-api && ./mvnw spring-boot:run      # http://localhost:8080/swagger-ui.html
+cd frontend/missionwatch-web && npm run start:backend       # the app, reading from the API
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions, checks and the branch workflow.
 
 ## Updating Live Mission Control for a launch
 
@@ -64,7 +74,9 @@ Push to `main` and the Pages workflow redeploys. Full guide: [docs/live-streams.
 - [Software Requirements Specification](docs/SRS.md)
 - [Live Mission Control SRS](docs/live-mission-control-srs.md)
 - [Architecture and roadmap](docs/architecture.md)
-- [API (planned)](docs/api.md)
+- [API](docs/api.md)
+- [Updating stream links](docs/live-streams.md)
+- [Backend module](backend/missionwatch-api/README.md)
 
 ## Roadmap
 
@@ -73,7 +85,7 @@ Push to `main` and the Pages workflow redeploys. Full guide: [docs/live-streams.
 | 1 | Frontend foundation | ✅ |
 | 2 | Launch Library 2, NASA media and GCAT history | ✅ |
 | 3 | Interactive CesiumJS globe, Mission Story Mode | ⏳ |
-| 4 | Spring Boot backend, PostgreSQL | ⏳ |
+| 4 | Spring Boot backend, PostgreSQL | ✅ (hosting in Phase 8) |
 | 5 | Historical data pipeline, schedule snapshots | ⏳ |
 | 6 | Data science and ML (gated on data sufficiency) | ⏳ |
 | 7 | Launch Intelligence, watchlists, notifications | ⏳ |

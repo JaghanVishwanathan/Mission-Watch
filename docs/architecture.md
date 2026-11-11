@@ -21,9 +21,18 @@ This document tracks how MissionWatch is built. The requirements live in [SRS.md
 
 Principles (SRS §3.2): separate the presentation, business-logic and data-processing layers. Keep credentials on the server. Normalise third-party data into internal models, and cache it. Keep model outputs traceable to a model version. Keep the core experience working when optional integrations fail.
 
-## Current state: Phase 2 (real data)
+## Current state: Phase 4 (backend)
 
-Only the Angular frontend exists so far. It reads live public data directly from the browser, and every source sits behind the `LAUNCH_DATA` injection token, so the Phase 4 backend can take over without changes to feature code.
+The Angular frontend and the Spring Boot API both exist. Every launch source sits behind the `LAUNCH_DATA` injection token, and a build-time environment picks one:
+
+| Environment | Command | Launch data from |
+|---|---|---|
+| `environment.ts` (default, production) | `npm start`, `npm run build` | Launch Library 2, directly from the browser |
+| `environment.backend.ts` | `npm run start:backend` | The MissionWatch API at `http://localhost:8080` |
+
+The public site stays on direct LL2 until the API is hosted (Phase 8). Feature code is identical in both modes.
+
+## Frontend
 
 ```text
 Browser
@@ -40,6 +49,7 @@ frontend/missionwatch-web/
     ├── core/
     │   ├── models/            Normalised domain models (mirror SRS §9 entities)
     │   ├── data/
+    │   │   ├── backend/       BackendLaunchDataService (MissionWatch API adapter)
     │   │   ├── ll2/           LL2 types, validating mapper, LiveLaunchDataService
     │   │   ├── history/       GCAT snapshot decoder and repository
     │   │   ├── media/         NASA imagery search
@@ -68,11 +78,51 @@ frontend/missionwatch-web/
 | `DataResponse<T>` wraps every payload with `DataMeta` (source, refresh time, stale flag, warnings) | Freshness and provenance are visible wherever data is shown (SRS §5.7, §8.2). |
 | Every feature route is lazy-loaded, and ECharts loads only in the analytics chunk | NFR-01 performance. |
 
-### Known limits of the frontend-only design
+### Known limits of the browser-only mode
 
-- Schedule-change history needs snapshots recorded over time, so it waits for the Phase 5 pipeline. Mission pages show the sourced LL2 updates instead.
-- Explorer search covers the next 40 and the last 40 launches. Searching the full catalogue needs the backend.
+- No schedule-change history: that needs snapshots recorded over time, which only the backend does. Mission pages show the sourced LL2 updates instead.
+- Explorer search covers the next 40 and the last 40 launches.
 - GCAT and LL2 name providers differently, so the two datasets are not joined record by record.
+
+## Backend (`backend/missionwatch-api`)
+
+Java 25, Spring Boot 4.1, PostgreSQL 18, Flyway, Caffeine, springdoc-openapi. Run and configuration instructions are in the [module README](../backend/missionwatch-api/README.md).
+
+```text
+Launch Library 2 ──► Ll2Client (rate budget) ──► Ll2Mapper ──► LaunchStore ──► PostgreSQL
+     ▲ every 15 min (upcoming) / 1 h (previous)        │            ├─ launch (+ document jsonb, source_payload jsonb)
+     └── Ll2RefreshJob                                 │            ├─ provider, rocket, launch_site
+                                                       │            ├─ launch_snapshot   (FR-07)
+                                                       └─ invalid → skipped, counted     └─ data_refresh      (freshness)
+
+HTTP GET /api/** ──► Controller ──► Service (Caffeine cache) ──► Repository ──► { data, meta }
+```
+
+```text
+com.jaghan.missionwatch
+├── common/       ApiResponse {data, meta}, DataMeta, ApiError, GlobalExceptionHandler
+├── config/       Typed settings (missionwatch.*), security and CORS, caching, scheduling
+├── launch/       LaunchController, LaunchService (read), LaunchStore (write), LaunchSearch
+│   ├── model/        LaunchView (= frontend Launch), LaunchStatus
+│   └── persistence/  JPA entities, repositories, search specifications
+├── provider/     Providers: entity, upsert, GET /api/providers
+├── snapshot/     Schedule snapshots: change detection and history
+├── freshness/    Refresh log and the freshness metadata built from it
+└── ingest/ll2/   The only code that knows LL2: client, records, mapper, refresh job
+```
+
+### Key decisions
+
+| Decision | Rationale |
+|---|---|
+| Package by feature, with rules enforced by ArchUnit (`ArchitectureTest`) | No cycles between features, controllers never touch repositories, and LL2 types never leave `ingest.ll2`. A future source (NASA, news) is a sibling adapter. |
+| The API serves the frontend's `Launch` shape as-is | The Angular backend adapter is a thin HTTP wrapper. The Java mapper is a port of `ll2-mapper.ts`, with the same test cases. |
+| `launch.document` (jsonb) holds the normalised view; relational columns hold what is filtered, sorted or joined | Rich, mostly-optional mission data without dozens of tables, while search stays in SQL. `source_payload` keeps the raw record for traceability and re-mapping. |
+| Snapshots are written only when time or status changes | Repeated refreshes are idempotent (NFR-02), and the table becomes the FR-07 dataset for Phases 5–7. |
+| One shared, sliding hourly budget for every LL2 call | The scheduled jobs use about 5 of LL2's ~15 anonymous requests per hour. On-demand lookups cannot exhaust the rest. |
+| A failed refresh keeps stored data, records the failure and marks responses `stale` | The site keeps working when LL2 is down, and says so (NFR-02). |
+| Flyway owns the schema; Hibernate only validates it | Migrations are versioned and repeatable. A mismatch fails at start-up, not in production queries. |
+| Testcontainers PostgreSQL in tests, not H2 | JSONB and timestamp behaviour are tested on the real database. |
 
 ## Roadmap
 
@@ -81,7 +131,7 @@ frontend/missionwatch-web/
 | 1 | Frontend foundation | Done |
 | 2 | Real data integration (Launch Library 2, NASA media, GCAT history) | Done |
 | 3 | Interactive globe (CesiumJS), Mission Story Mode | Planned |
-| 4 | Spring Boot backend, PostgreSQL, Flyway | Planned |
+| 4 | Spring Boot backend, PostgreSQL, Flyway | Done (hosting in Phase 8) |
 | 5 | Historical data pipeline, schedule snapshots | Planned |
 | 6 | Data science and ML (gated on data sufficiency) | Planned |
 | 7 | Launch Intelligence, watchlists, notifications | Planned |
@@ -90,4 +140,4 @@ frontend/missionwatch-web/
 ## Deployment
 
 - **Frontend:** GitHub Pages, built by `.github/workflows/deploy-pages.yml`, which first runs `npm run data:history` and then builds with `--base-href /`, since the site is served from the root of `missionwatch.jaghan.com`. It runs on every push to `main` and weekly, so the GCAT snapshot stays current. `index.html` is copied to `404.html` so nested routes still resolve on a full page load.
-- **Backend, database and ML service:** a separate host, to be chosen in Phase 4 or Phase 8. GitHub Pages can only serve static files.
+- **Backend and database:** built and tested by `.github/workflows/backend-ci.yml` (including the container image), but not hosted yet. A Java-capable host and managed PostgreSQL are chosen in Phase 8; the `Dockerfile` and `deployment/docker/compose.yaml` are the starting point. GitHub Pages can only serve static files.

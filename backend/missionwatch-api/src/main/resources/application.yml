@@ -1,0 +1,65 @@
+# MissionWatch API. Every value can be overridden by an environment variable
+# (e.g. MISSIONWATCH_LL2_REFRESH_ENABLED=false). Secrets are never committed.
+spring:
+  application:
+    name: missionwatch-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/missionwatch}
+    username: ${DB_USER:missionwatch}
+    password: ${DB_PASSWORD:missionwatch}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate # Flyway owns the schema (src/main/resources/db/migration)
+  flyway:
+    locations: classpath:db/migration
+  cache:
+    cache-names: launch-lists,launch-detail,launch-search,providers
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=10m
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  error:
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+missionwatch:
+  ll2:
+    base-url: https://ll.thespacedevs.com/2.3.0
+    # LL2 allows ~15 anonymous requests per hour. Scheduled refreshes use ~5;
+    # the budget caps everything, including on-demand detail lookups.
+    requests-per-hour: 12
+    list-limit: 40
+    refresh-enabled: true
+    upcoming-refresh: PT15M
+    previous-refresh: PT1H
+    user-agent: MissionWatch/0.4 (+https://missionwatch.jaghan.com)
+  freshness:
+    # Data older than this is flagged as stale in response metadata.
+    stale-after: PT2H
+  cors:
+    allowed-origins:
+      - http://localhost:4200
+      - https://missionwatch.jaghan.com
+
+logging:
+  level:
+    com.jaghan.missionwatch: INFO

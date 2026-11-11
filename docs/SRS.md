@@ -164,6 +164,8 @@ The frontend shall be the primary product experience. It must prioritize visual 
 
 ### 4.2 Backend
 
+> **Implementation note (Phase 4):** built with Java 25 (LTS) and Spring Boot 4.1, the current releases at the time, rather than older versions. See [architecture.md](architecture.md#backend-backendmissionwatch-api).
+
 | Technology | Purpose |
 |---|---|
 | Java | Backend programming language |
