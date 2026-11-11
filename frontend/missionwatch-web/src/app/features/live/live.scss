@@ -425,6 +425,15 @@
   border-radius: var(--radius);
 }
 
+.config-problems {
+  display: block;
+
+  ul {
+    margin: var(--space-1) 0 0;
+    padding-left: var(--space-4);
+  }
+}
+
 @media (max-width: 719px) {
   .t0 {
     justify-items: start;

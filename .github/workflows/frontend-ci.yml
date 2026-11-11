@@ -28,6 +28,10 @@ jobs:
 
       - run: npm ci
 
+      - name: Formatting
+        run: npm run format:check
+
+      # Includes the check that public/config/live-missions.json is valid.
       - name: Unit tests
         run: npm test -- --watch=false
 

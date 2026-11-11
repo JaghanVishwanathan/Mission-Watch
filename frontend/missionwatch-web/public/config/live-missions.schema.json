@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MissionWatch Live Mission Control configuration",
+  "description": "Stream links and mission settings for the /live page. Types mirror src/app/features/live/live.models.ts.",
+  "type": "object",
+  "required": ["missions"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "_help": {
+      "description": "Notes for whoever edits this file. Ignored by the app.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "missions": {
+      "description": "The first mission is shown by default. More than one adds a mission selector.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/mission" }
+    }
+  },
+  "$defs": {
+    "isoTime": {
+      "description": "ISO-8601 time, e.g. 2026-11-14T12:00:00Z. Leave empty if unknown.",
+      "type": "string"
+    },
+    "mission": {
+      "type": "object",
+      "required": ["id", "launch", "streams"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Unique key, used in the ?mission= query parameter.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "name": {
+          "description": "Leave empty to use the mission name from Launch Library 2.",
+          "type": "string"
+        },
+        "vehicle": {
+          "description": "Leave empty to use the rocket from Launch Library 2.",
+          "type": "string"
+        },
+        "launch": {
+          "description": "Where the countdown, status and timeline come from.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ll2LaunchId": {
+              "description": "Launch Library 2 launch UUID (the id in /launches/<id> on this site). Pins a specific launch.",
+              "type": "string"
+            },
+            "nextFromProvider": {
+              "description": "When no ll2LaunchId is set, follow this provider's next upcoming launch, e.g. SpaceX.",
+              "type": "string"
+            },
+            "fallbackT0": {
+              "$ref": "#/$defs/isoTime",
+              "description": "T-0 used only if launch data cannot be loaded at all."
+            }
+          }
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "oneOf": [{ "$ref": "#/$defs/youtubeStream" }, { "$ref": "#/$defs/xStream" }]
+          }
+        },
+        "events": {
+          "description": "Optional. When non-empty, replaces the Launch Library 2 timeline.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/event" }
+        },
+        "xDiscussionUrl": {
+          "description": "Post whose replies form the X discussion. Defaults to the X stream's post.",
+          "type": "string"
+        }
+      }
+    },
+    "youtubeStream": {
+      "type": "object",
+      "required": ["platform", "id", "broadcaster", "video", "channelUrl"],
+      "additionalProperties": false,
+      "properties": {
+        "platform": { "const": "youtube" },
+        "id": { "description": "Unique within the mission.", "type": "string" },
+        "broadcaster": { "description": "Shown on the panel for attribution.", "type": "string" },
+        "video": {
+          "description": "YouTube URL, 11-character video ID, or YouTube's <iframe> embed code. Empty when no stream is announced yet.",
+          "type": "string"
+        },
+        "channelUrl": {
+          "description": "Opened when the stream cannot be played inline, e.g. https://www.youtube.com/@Channel/live",
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "scheduledStart": { "$ref": "#/$defs/isoTime" }
+      }
+    },
+    "xStream": {
+      "type": "object",
+      "required": ["platform", "id", "broadcaster", "postUrl", "profileUrl"],
+      "additionalProperties": false,
+      "properties": {
+        "platform": { "const": "x" },
+        "id": { "description": "Unique within the mission.", "type": "string" },
+        "broadcaster": { "type": "string" },
+        "broadcastUrl": {
+          "description": "x.com/i/broadcasts/... link or X's <blockquote class=\"twitter-broadcast\"> embed code.",
+          "type": "string"
+        },
+        "postUrl": {
+          "description": "x.com/<user>/status/<id>. Embedded when there is no broadcast.",
+          "type": "string"
+        },
+        "profileUrl": {
+          "description": "Opened when nothing more specific is configured.",
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "scheduledStart": { "$ref": "#/$defs/isoTime" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["id", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "offsetSeconds": {
+          "description": "Seconds relative to liftoff (negative before).",
+          "type": "number"
+        },
+        "plannedAt": { "$ref": "#/$defs/isoTime" },
+        "actualAt": {
+          "$ref": "#/$defs/isoTime",
+          "description": "Set only once confirmed by an authoritative source."
+        },
+        "status": { "enum": ["delayed", "cancelled"] }
+      }
+    }
+  }
+}

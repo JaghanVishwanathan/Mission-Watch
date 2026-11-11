@@ -1,6 +1,7 @@
 /**
  * Types for Live Mission Control (MW-FEAT-LIVE-001). The values themselves live in
- * `live-mission.config.ts`, the single file to edit before each launch.
+ * `public/config/live-missions.json`, the single file to edit before each launch
+ * (validated by `live-config.ts`, described by `live-missions.schema.json`).
  */
 
 /** A YouTube broadcast panel (Spaceflight Now, NASASpaceflight, Everyday Astronaut…). */

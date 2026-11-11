@@ -51,14 +51,13 @@ npm run build
 
 ## Updating Live Mission Control for a launch
 
-Every stream link is in one file: [`frontend/missionwatch-web/src/app/features/live/live-mission.config.ts`](frontend/missionwatch-web/src/app/features/live/live-mission.config.ts). Before a launch:
+Every stream link is in one JSON file: [`frontend/missionwatch-web/public/config/live-missions.json`](frontend/missionwatch-web/public/config/live-missions.json). Before a launch:
 
-1. For each YouTube broadcaster (currently Spaceflight Now and NASASpaceflight; swap a broadcaster in or out as needed), paste the livestream URL, video ID or full `<iframe>` embed code into `video`.
-2. Paste the SpaceX broadcast (`https://x.com/i/broadcasts/…` or X's full `twitter-broadcast` embed code) into `broadcastUrl`. Without a broadcast, a post URL in `postUrl` is embedded instead.
+1. For each YouTube broadcaster, paste the livestream URL or video ID into `video`.
+2. Paste the SpaceX broadcast (`https://x.com/i/broadcasts/…`) into `broadcastUrl`.
 3. Optionally set `launch.ll2LaunchId` to pin a launch. Otherwise the page follows the next SpaceX launch.
 
-Commit and push to `main`; the Pages workflow redeploys. Empty links are fine: the panel shows *Unavailable* with a link to the channel.
-
+Push to `main` and the Pages workflow redeploys. Full guide: [docs/live-streams.md](docs/live-streams.md).
 
 ## Documentation
 

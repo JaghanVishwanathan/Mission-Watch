@@ -12,7 +12,7 @@
 | Hosting | GitHub Pages |
 
 > **Per-launch configuration:** all stream and embed links live in
-> `frontend/missionwatch-web/src/app/features/live/live-mission.config.ts`.
+> `frontend/missionwatch-web/public/config/live-missions.json` (guide: [live-streams.md](live-streams.md)).
 
 ## 1. Introduction
 

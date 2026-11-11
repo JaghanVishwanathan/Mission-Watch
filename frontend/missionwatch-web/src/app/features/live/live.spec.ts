@@ -4,7 +4,9 @@ import { Observable, of, throwError } from 'rxjs';
 import { DataSourceError, LAUNCH_DATA, LaunchDataSource } from '../../core/data';
 import { DataResponse, Launch } from '../../core/models';
 import { makeLaunch } from '../../core/testing/fixtures';
+import shipped from '../../../../public/config/live-missions.json';
 import { Live } from './live';
+import { parseLiveConfig } from './live-config';
 
 const META = { source: 'Test', lastRefresh: new Date().toISOString(), warnings: [], isMock: false };
 
@@ -20,7 +22,10 @@ function setup(
       { provide: LAUNCH_DATA, useValue: { getUpcoming, getLaunch } as Partial<LaunchDataSource> },
     ],
   });
-  return TestBed.createComponent(Live);
+  const fixture = TestBed.createComponent(Live);
+  // The route resolver supplies this in the app.
+  fixture.componentRef.setInput('liveConfig', parseLiveConfig(shipped));
+  return fixture;
 }
 
 describe('Live', () => {

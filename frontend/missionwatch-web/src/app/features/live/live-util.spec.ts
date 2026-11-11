@@ -1,4 +1,3 @@
-import { LIVE_MISSIONS } from './live-mission.config';
 import {
   buildTimeline,
   coverageOf,
@@ -149,25 +148,5 @@ describe('coverageOf', () => {
     expect(coverageOf(['SCHEDULED', 'UNKNOWN'])).toBe('scheduled');
     expect(coverageOf(['UNAVAILABLE', 'OFFLINE'])).toBe('none');
     expect(coverageOf(['LOADING', 'UNAVAILABLE'])).toBe('unverified');
-  });
-});
-
-describe('LIVE_MISSIONS config', () => {
-  it('has unique mission and stream IDs and valid links', () => {
-    expect(LIVE_MISSIONS.length).toBeGreaterThan(0);
-    expect(new Set(LIVE_MISSIONS.map((m) => m.id)).size).toBe(LIVE_MISSIONS.length);
-    for (const m of LIVE_MISSIONS) {
-      expect(new Set(m.streams.map((s) => s.id)).size).toBe(m.streams.length);
-      for (const s of m.streams) {
-        if (s.platform === 'youtube') {
-          if (s.video) expect(parseYoutubeId(s.video)).toBeDefined();
-          expect(safeHttpsUrl(s.channelUrl)).toBeDefined();
-        } else {
-          if (s.postUrl) expect(parseXPostId(s.postUrl)).toBeDefined();
-          if (s.broadcastUrl) expect(parseXBroadcastId(s.broadcastUrl)).toBeDefined();
-          expect(safeHttpsUrl(s.profileUrl)).toBeDefined();
-        }
-      }
-    }
   });
 });
