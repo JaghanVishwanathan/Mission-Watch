@@ -6,19 +6,12 @@ import { LAUNCH_DATA, LaunchDataSource } from '../../core/data';
 import { DataResponse, Launch } from '../../core/models';
 import { makeLaunch } from '../../core/testing/fixtures';
 import { Globe } from './globe';
-import {
-  GLOBE_RENDERER,
-  GlobeMarker,
-  GlobePath,
-  GlobeRenderer,
-  GlobeTarget,
-} from './globe-renderer';
+import { GLOBE_RENDERER, GlobeMarker, GlobeRenderer, GlobeTarget } from './globe-renderer';
 
 const META = { source: 'Test', lastRefresh: new Date().toISOString(), warnings: [], isMock: false };
 
 class FakeRenderer implements GlobeRenderer {
   markers: GlobeMarker[] = [];
-  paths: (GlobePath | null)[] = [];
   focuses: { target: GlobeTarget; animate: boolean }[] = [];
   select?: (id: string) => void;
   destroyed = false;
@@ -28,9 +21,6 @@ class FakeRenderer implements GlobeRenderer {
   }
   setMarkers(m: GlobeMarker[]): void {
     this.markers = m;
-  }
-  setPath(p: GlobePath | null): void {
-    this.paths.push(p);
   }
   focus(target: GlobeTarget, animate: boolean): void {
     this.focuses.push({ target, animate });
@@ -63,7 +53,6 @@ const starlink = makeLaunch({
   missionName: 'Starlink Group 1',
   site: cape,
   scheduledTime: '2026-12-01T10:00:00Z',
-  payload: { orbit: 'Low Earth Orbit' },
 });
 const gps = makeLaunch({
   id: 'gps',
@@ -76,16 +65,7 @@ const sentinel = makeLaunch({
   missionName: 'Sentinel',
   site: vandenberg,
   scheduledTime: '2026-12-02T10:00:00Z',
-  payload: { orbit: 'Sun-Synchronous Orbit' },
 });
-const starlinkFull: Launch = {
-  ...starlink,
-  milestones: [
-    { id: 'm1', name: 'Liftoff', offsetSeconds: 0, estimated: false },
-    { id: 'm0', name: 'Prop load', offsetSeconds: -2280, estimated: false },
-    { id: 'm2', name: 'SECO-1', offsetSeconds: 519, estimated: false },
-  ],
-};
 
 async function setup(url: string, renderer = new FakeRenderer()) {
   const data: Partial<LaunchDataSource> = {
@@ -93,10 +73,7 @@ async function setup(url: string, renderer = new FakeRenderer()) {
     getPrevious: () => of<DataResponse<Launch[]>>({ data: [], meta: META }),
     getLaunch: (id: string) =>
       of<DataResponse<Launch | null>>({
-        data:
-          id === 'starlink'
-            ? starlinkFull
-            : ([starlink, gps, sentinel].find((l) => l.id === id) ?? null),
+        data: [starlink, gps, sentinel].find((l) => l.id === id) ?? null,
         meta: META,
       }),
   };
@@ -150,8 +127,8 @@ describe('Globe', () => {
     expect(renderer.focuses.at(-1)?.target).toMatchObject({ latitude: 28.56, longitude: -80.58 });
   });
 
-  it('selecting a launch puts it in the URL and shows its card and illustrative path', async () => {
-    const { el, harness, router, renderer } = await setup('/globe');
+  it('selecting a launch puts it in the URL and shows its card with a mission link', async () => {
+    const { el, harness, router } = await setup('/globe');
     buttons(el, 'button.site')[1].click();
     harness.detectChanges();
     buttons(el, 'button.launch')[0].click();
@@ -160,30 +137,13 @@ describe('Globe', () => {
 
     expect(router.url).toBe('/globe?launch=sentinel');
     expect(el.querySelector('#sel-title')?.textContent).toContain('Sentinel');
-    expect(el.textContent).toContain('Illustrative path, not a computed trajectory');
-    expect(renderer.paths.at(-1)?.label).toContain('Illustrative');
+    expect(el.querySelector('.card a')?.getAttribute('href')).toBe('/launches/sentinel');
   });
 
-  it('story mode steps through the mission milestones and moves the marker along the path', async () => {
-    const { el, harness, renderer } = await setup('/globe?launch=starlink&story=1');
-    const steps = () => buttons(el, 'button.step');
-    expect(steps().map((b) => b.querySelector('.step-title')?.textContent)).toEqual([
-      'Prop load',
-      'Liftoff',
-      'SECO-1',
-    ]);
-    expect(renderer.paths.at(-1)?.progress).toBe(0);
-
-    steps()[2].click();
-    harness.detectChanges();
-    expect(renderer.paths.at(-1)?.progress).toBe(1);
-    expect(el.textContent).toContain('Step 3 of 3');
-
-    const panel = el.querySelector<HTMLElement>('.story')!;
-    panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
-    harness.detectChanges();
-    expect(el.textContent).toContain('Step 2 of 3');
-    expect(steps()[1].getAttribute('aria-current')).toBe('step');
+  it('opens a launch linked from a mission page and focuses its pad', async () => {
+    const { el, renderer } = await setup('/globe?launch=gps');
+    expect(el.querySelector('#sel-title')?.textContent).toContain('GPS III');
+    expect(renderer.focuses.at(-1)?.target).toMatchObject({ latitude: 28.56, longitude: -80.58 });
   });
 
   it('keeps the list usable when the 3D globe cannot start', async () => {

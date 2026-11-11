@@ -2,7 +2,7 @@
   <mw-page-header
     eyebrow="Geospatial exploration"
     title="Mission Globe"
-    subtitle="Launch sites around the world. Select a site or a launch, then follow its milestones in Story mode."
+    subtitle="Launch sites around the world. Select a site to see its launches, then open a mission."
   >
     <div class="seg" role="group" aria-label="Launches shown">
       <button
@@ -43,12 +43,6 @@
           <p class="muted">Every site and launch is still listed in the panel.</p>
         </div>
       }
-      <p class="legend">
-        <span><span class="dot" aria-hidden="true"></span> Launch site</span>
-        @if (path()) {
-          <span><span class="dash" aria-hidden="true"></span> {{ illustrativeLabel }}</span>
-        }
-      </p>
     </section>
 
     <!-- Panel -->
@@ -79,116 +73,9 @@
             <mw-countdown [target]="l.scheduledTime" [compact]="true" />
           }
           <div class="actions">
-            <a class="btn" [routerLink]="['/launches', l.id]">Mission details</a>
-            <button
-              type="button"
-              class="btn btn--primary"
-              [attr.aria-pressed]="story()"
-              (click)="setStory(!story())"
-            >
-              {{ story() ? 'Close story mode' : 'Story mode' }}
-            </button>
+            <a class="btn btn--primary" [routerLink]="['/launches', l.id]">Mission details</a>
           </div>
-          @if (!path()) {
-            <p class="note">
-              No path is drawn: the destination orbit
-              {{ l.payload?.orbit ? '(' + l.payload?.orbit + ') ' : '' }}isn't one MissionWatch can
-              illustrate honestly.
-            </p>
-          }
         </section>
-
-        @if (story()) {
-          <!-- Mission Story Mode (FR-05) -->
-          <section
-            class="story"
-            aria-labelledby="story-title"
-            tabindex="0"
-            (keydown)="onStoryKey($event)"
-          >
-            <h3 id="story-title" class="overline">Story mode</h3>
-            @if (detail.isLoading() && !stops().length) {
-              <mw-skeleton height="120px" />
-            } @else if (stops().length) {
-              <p class="muted small">
-                Milestones published for this mission. Use the arrow keys or the buttons to step
-                through them.
-                @if (path()) {
-                  The marker moves along an illustrative path, not a computed trajectory.
-                }
-              </p>
-              <ol class="steps">
-                @for (s of stops(); track s.id; let i = $index) {
-                  <li>
-                    <button
-                      type="button"
-                      class="step"
-                      [class.step--current]="i === stepIndex()"
-                      [attr.aria-current]="i === stepIndex() ? 'step' : null"
-                      (click)="goToStep(i)"
-                    >
-                      <span class="offset mono">{{
-                        s.offsetSeconds !== undefined ? formatOffset(s.offsetSeconds) : '—'
-                      }}</span>
-                      <span class="step-body">
-                        <span class="step-title">{{ s.name }}</span>
-                        @if (i === stepIndex() && s.description) {
-                          <span class="step-desc">{{ s.description }}</span>
-                        }
-                        <span class="step-time">
-                          @if (s.plannedAt) {
-                            Planned
-                            <time [attr.datetime]="s.plannedAt">{{
-                              s.plannedAt | date: 'MMM d, HH:mm:ss'
-                            }}</time>
-                          } @else if (s.offsetSeconds === undefined) {
-                            Time not published
-                          } @else {
-                            Exact time depends on the final launch time
-                          }
-                          @if (s.estimated) {
-                            · estimated
-                          }
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                }
-              </ol>
-              <div class="actions">
-                <button
-                  type="button"
-                  class="btn"
-                  [disabled]="stepIndex() === 0"
-                  (click)="goToStep(stepIndex() - 1)"
-                >
-                  <mw-icon name="arrow-left" [size]="14" /> Previous
-                </button>
-                <span class="muted small" aria-live="polite"
-                  >Step {{ stepIndex() + 1 }} of {{ stops().length }}</span
-                >
-                <button
-                  type="button"
-                  class="btn"
-                  [disabled]="stepIndex() === stops().length - 1"
-                  (click)="goToStep(stepIndex() + 1)"
-                >
-                  Next <mw-icon name="arrow-right" [size]="14" />
-                </button>
-              </div>
-            } @else {
-              <p class="muted">No milestones have been published for this mission yet.</p>
-            }
-            @if (flightClub(); as fc) {
-              <p class="small">
-                For a computed trajectory, see the
-                <a [href]="fc" target="_blank" rel="noopener noreferrer"
-                  >Flight Club simulation <mw-icon name="external" [size]="12"
-                /></a>
-              </p>
-            }
-          </section>
-        }
       } @else {
         <!-- Browse -->
         <label class="search">

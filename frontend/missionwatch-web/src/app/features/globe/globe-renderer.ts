@@ -1,5 +1,4 @@
 import { InjectionToken } from '@angular/core';
-import { GeoPoint } from './globe-util';
 
 /**
  * The boundary between the globe page and the 3D engine. Only cesium-globe-renderer.ts imports
@@ -16,14 +15,6 @@ export interface GlobeMarker {
   selected: boolean;
 }
 
-export interface GlobePath {
-  points: GeoPoint[];
-  /** Where the vehicle marker sits on the path, 0 (pad) to 1 (end). */
-  progress: number;
-  /** Shown next to the path; always says the path is illustrative. */
-  label: string;
-}
-
 export interface GlobeTarget {
   latitude: number;
   longitude: number;
@@ -35,7 +26,6 @@ export interface GlobeRenderer {
   /** Creates the globe in the element. Rejects when WebGL or the engine is unavailable. */
   init(container: HTMLElement): Promise<void>;
   setMarkers(markers: GlobeMarker[]): void;
-  setPath(path: GlobePath | null): void;
   focus(target: GlobeTarget, animate: boolean): void;
   /** Called with a marker id when the viewer clicks a site marker. */
   onSelect(handler: (markerId: string) => void): void;

@@ -4,22 +4,19 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  ConstantPositionProperty,
   defined,
   Entity,
   HorizontalOrigin,
   ImageryLayer,
   LabelStyle,
   NearFarScalar,
-  PolylineDashMaterialProperty,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
   TileMapServiceImageryProvider,
   VerticalOrigin,
   Viewer,
 } from 'cesium';
-import { GlobeMarker, GlobePath, GlobeRenderer, GlobeTarget } from './globe-renderer';
-import { pointAlong } from './globe-util';
+import { GlobeMarker, GlobeRenderer, GlobeTarget } from './globe-renderer';
 
 const SITE_PREFIX = 'site:';
 const WIDGETS_CSS_ID = 'mw-cesium-widgets-css';
@@ -33,7 +30,6 @@ export class CesiumGlobeRenderer implements GlobeRenderer {
   private handler?: ScreenSpaceEventHandler;
   private selectHandler?: (id: string) => void;
   private readonly markerEntities: Entity[] = [];
-  private readonly pathEntities: Entity[] = [];
   private accent = Color.fromCssColorString('#3b82f6');
 
   async init(container: HTMLElement): Promise<void> {
@@ -103,54 +99,6 @@ export class CesiumGlobeRenderer implements GlobeRenderer {
             translucencyByDistance: m.selected
               ? undefined
               : new NearFarScalar(1.5e6, 1.0, 8.0e6, 0.0),
-          },
-        }),
-      );
-    }
-    viewer.scene.requestRender();
-  }
-
-  setPath(path: GlobePath | null): void {
-    const viewer = this.viewer;
-    if (!viewer) return;
-    for (const e of this.pathEntities.splice(0)) viewer.entities.remove(e);
-    if (path) {
-      const positions = path.points.map((p) =>
-        Cartesian3.fromDegrees(p.longitude, p.latitude, p.altitudeKm * 1000),
-      );
-      const end = path.points.at(-1)!;
-      const vehicle = pointAlong(path, path.progress);
-      this.pathEntities.push(
-        viewer.entities.add({
-          polyline: {
-            positions,
-            width: 3,
-            material: new PolylineDashMaterialProperty({ color: this.accent, dashLength: 12 }),
-          },
-        }),
-        viewer.entities.add({
-          position: new ConstantPositionProperty(
-            Cartesian3.fromDegrees(end.longitude, end.latitude, end.altitudeKm * 1000),
-          ),
-          label: {
-            text: path.label,
-            font: '12px sans-serif',
-            fillColor: Color.WHITE,
-            outlineColor: Color.BLACK,
-            outlineWidth: 3,
-            style: LabelStyle.FILL_AND_OUTLINE,
-            pixelOffset: new Cartesian2(0, -16),
-          },
-        }),
-        viewer.entities.add({
-          position: new ConstantPositionProperty(
-            Cartesian3.fromDegrees(vehicle.longitude, vehicle.latitude, vehicle.altitudeKm * 1000),
-          ),
-          point: {
-            pixelSize: 12,
-            color: Color.WHITE,
-            outlineColor: this.accent,
-            outlineWidth: 3,
           },
         }),
       );

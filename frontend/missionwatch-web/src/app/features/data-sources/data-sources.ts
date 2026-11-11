@@ -57,7 +57,7 @@ export class DataSources {
       status: 'Live',
       license: 'CesiumJS: Apache 2.0. Natural Earth: public domain.',
       limitations:
-        'Low-resolution world imagery, suited to locating launch sites rather than detailed maps. Ascent paths on the globe are illustrative, not computed trajectories.',
+        'Low-resolution world imagery, suited to locating launch sites rather than detailed maps.',
     },
     {
       name: 'NASA Image and Video Library',

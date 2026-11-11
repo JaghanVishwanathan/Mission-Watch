@@ -9,7 +9,7 @@
 - **Dashboard:** the next launch with a live countdown, upcoming and recent launches, featured missions, and real launch statistics for this year and all time.
 - **Launch Explorer:** search, status, provider and date filters, sorting, and grid or list views. Filter state lives in the URL, so views are shareable.
 - **Mission detail:** the published mission timeline, sourced launch updates, vehicle specifications, webcasts, credited launch imagery and related NASA photos. Dates are shown only to the precision the source knows, and missing data is labelled *Unavailable*, never invented.
-- **Mission Globe (`/globe`):** a CesiumJS 3D globe of launch sites with a keyboard-accessible site list, plus **Story mode**, which steps through a mission's published milestones and moves a marker along a dashed, clearly labelled illustrative ascent path. Loaded only on this page, with no map tokens or third-party map servers.
+- **Mission Globe (`/globe`):** a CesiumJS 3D globe of launch sites, with a keyboard-accessible list of sites and their launches. Selecting a site or launch focuses the globe, and mission pages link to their pad. Loaded only on this page, with no map tokens or third-party map servers.
 - **Live Mission Control (`/live`):** Spaceflight Now, NASASpaceflight and SpaceX broadcasts side by side, an audio selector, YouTube Live Chat and the SpaceX discussion on X in a large 2×2 grid, plus a mission countdown and timeline from Launch Library 2. Third-party players load only after the viewer allows them, and a stream is marked *Live* only when the platform reports it.
 - **Analytics:** every orbital launch attempt since 1957: launches per year and month, provider volume and outcome distribution in Apache ECharts. Every chart has a table view, and success rates are withheld for small samples.
 - **Rate-limit aware:** Launch Library 2 allows about 15 requests per hour per visitor, so responses are cached in the browser. When a refresh fails, the page shows the saved copy and labels it.
@@ -85,7 +85,7 @@ Push to `main` and the Pages workflow redeploys. Full guide: [docs/live-streams.
 |---|---|---|
 | 1 | Frontend foundation | ✅ |
 | 2 | Launch Library 2, NASA media and GCAT history | ✅ |
-| 3 | Interactive CesiumJS globe, Mission Story Mode | ✅ |
+| 3 | Interactive CesiumJS globe (Story Mode removed; see architecture notes) | ✅ |
 | 4 | Spring Boot backend, MySQL | ✅ (hosting in Phase 8) |
 | 5 | Historical data pipeline, schedule snapshots | ⏳ |
 | 6 | Data science and ML (gated on data sufficiency) | ⏳ |
