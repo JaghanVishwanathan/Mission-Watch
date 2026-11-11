@@ -16,7 +16,7 @@ How the codebase is organised, the conventions it follows, and the checks a chan
 | Frontend | `npm run format:check` | Prettier formatting (`npm run format` fixes it) |
 | | `npm test -- --watch=false` | Unit tests, including validation of `public/config/live-missions.json` |
 | | `npm run build` | Production build and size budgets |
-| Backend | `./mvnw verify` | Spotless formatting (`./mvnw spotless:apply` fixes it), unit tests, PostgreSQL integration tests (need Docker), ArchUnit architecture rules |
+| Backend | `./mvnw verify` | Spotless formatting (`./mvnw spotless:apply` fixes it), unit tests, MySQL integration tests (need Docker), ArchUnit architecture rules |
 
 CI runs the same commands: `.github/workflows/frontend-ci.yml` and `backend-ci.yml`.
 

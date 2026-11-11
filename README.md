@@ -2,7 +2,7 @@
 
 **Space mission intelligence platform.** Explore upcoming and historical rocket launches, follow how launch schedules change over time and investigate evidence-based launch analytics.
 
-> **Status: Phase 4 (backend).** Launches come live from [Launch Library 2](https://thespacedevs.com/llapi), mission imagery from the [NASA Image and Video Library](https://images.nasa.gov), and historical statistics from Jonathan McDowell's [GCAT](https://planet4589.org/space/gcat) (CC BY 4.0). The Spring Boot API stores launches and their schedule history in PostgreSQL. The public site reads LL2 directly until the API is hosted in Phase 8.
+> **Status: Phase 4 (backend).** Launches come live from [Launch Library 2](https://thespacedevs.com/llapi), mission imagery from the [NASA Image and Video Library](https://images.nasa.gov), and historical statistics from Jonathan McDowell's [GCAT](https://planet4589.org/space/gcat) (CC BY 4.0). The Spring Boot API stores launches and their schedule history in MySQL. The public site reads LL2 directly until the API is hosted in Phase 8.
 
 ## Highlights
 
@@ -21,7 +21,7 @@
 |---|---|
 | Frontend | Angular 22 (standalone, zoneless, signals, `rxResource`), TypeScript, RxJS, SCSS design tokens, Apache ECharts, Vitest |
 | Data sources | Launch Library 2 (live), NASA Image and Video Library (live), GCAT (build-time snapshot) |
-| Backend | Java 25, Spring Boot 4.1 (Web MVC, Data JPA, Security, Validation, Actuator), Flyway, PostgreSQL 18, Caffeine, OpenAPI, Testcontainers, ArchUnit |
+| Backend | Java 25, Spring Boot 4.1 (Web MVC, Data JPA, Security, Validation, Actuator), Flyway, MySQL 9.7 (LTS), Caffeine, OpenAPI, Testcontainers, ArchUnit |
 | Data science (Phases 5–6) | Python, pandas, scikit-learn, XGBoost, SHAP, FastAPI |
 | CI/CD | GitHub Actions (frontend CI, backend CI, Pages deploy), Docker |
 
@@ -32,7 +32,7 @@ frontend/missionwatch-web/   Angular application
 backend/missionwatch-api/    Spring Boot API
 data-science/                Pipeline, notebooks and models (planned)
 docs/                        SRS, architecture, API, guides
-deployment/docker/           Docker Compose for PostgreSQL and the API
+deployment/docker/           Docker Compose for MySQL and the API
 .github/workflows/           CI and Pages deployment
 ```
 
@@ -52,7 +52,7 @@ npm run build
 With the backend ([details](backend/missionwatch-api/README.md)):
 
 ```bash
-docker compose -f deployment/docker/compose.yaml up -d postgres
+docker compose -f deployment/docker/compose.yaml up -d mysql
 cd backend/missionwatch-api && ./mvnw spring-boot:run      # http://localhost:8080/swagger-ui.html
 cd frontend/missionwatch-web && npm run start:backend       # the app, reading from the API
 ```
@@ -85,7 +85,7 @@ Push to `main` and the Pages workflow redeploys. Full guide: [docs/live-streams.
 | 1 | Frontend foundation | ✅ |
 | 2 | Launch Library 2, NASA media and GCAT history | ✅ |
 | 3 | Interactive CesiumJS globe, Mission Story Mode | ⏳ |
-| 4 | Spring Boot backend, PostgreSQL | ✅ (hosting in Phase 8) |
+| 4 | Spring Boot backend, MySQL | ✅ (hosting in Phase 8) |
 | 5 | Historical data pipeline, schedule snapshots | ⏳ |
 | 6 | Data science and ML (gated on data sufficiency) | ⏳ |
 | 7 | Launch Intelligence, watchlists, notifications | ⏳ |

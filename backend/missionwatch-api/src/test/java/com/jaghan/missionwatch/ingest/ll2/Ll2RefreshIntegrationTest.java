@@ -6,8 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jaghan.missionwatch.DatabaseIntegrationTest;
 import com.jaghan.missionwatch.Fixtures;
-import com.jaghan.missionwatch.PostgresIntegrationTest;
 import com.jaghan.missionwatch.freshness.RefreshOutcome;
 import java.util.List;
 import java.util.Optional;
@@ -20,12 +20,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.JsonNode;
 
 /**
- * End to end against PostgreSQL: LL2 records go through the refresh into the database (Flyway
- * schema, JSONB documents, snapshots) and come back out of the HTTP API. Only the LL2 client is
+ * End to end against MySQL: LL2 records go through the refresh into the database (Flyway
+ * schema, JSON documents, snapshots) and come back out of the HTTP API. Only the LL2 client is
  * stubbed.
  */
 @AutoConfigureMockMvc
-class Ll2RefreshIntegrationTest extends PostgresIntegrationTest {
+class Ll2RefreshIntegrationTest extends DatabaseIntegrationTest {
 
     private static final String ID_A = "aaaaaaaa-0000-0000-0000-000000000001";
     private static final String ID_B = "bbbbbbbb-0000-0000-0000-000000000002";
@@ -101,6 +101,15 @@ class Ll2RefreshIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].id").value(ID_B));
+
+        // LIKE wildcards in the query are matched literally, not as wildcards.
+        mvc.perform(get("/api/launches/search").param("q", "%"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
+        mvc.perform(get("/api/launches/search").param("q", "Group_15"))
+                .andExpect(jsonPath("$.data.length()").value(0));
+        mvc.perform(get("/api/launches/search").param("q", "GROUP 15-25"))
+                .andExpect(jsonPath("$.data.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
 
         mvc.perform(get("/api/launches/search").param("from", "2026-12-03").param("to", "2026-12-31"))
                 .andExpect(jsonPath("$.data[*].id").value(org.hamcrest.Matchers.hasItem(ID_B)))

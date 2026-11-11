@@ -67,11 +67,11 @@ public class LaunchEntity {
     private Instant refreshedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(nullable = false, columnDefinition = "jsonb")
+    @Column(nullable = false, columnDefinition = "json")
     private String document;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "source_payload", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "source_payload", nullable = false, columnDefinition = "json")
     private String sourcePayload;
 
     protected LaunchEntity() {}

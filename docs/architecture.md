@@ -13,7 +13,7 @@ This document tracks how MissionWatch is built. The requirements live in [SRS.md
                     Spring Boot Backend
              REST API · Data Cache · Scheduled Jobs
                              ▼
-                        PostgreSQL
+                        MySQL
                  ┌───────────┴───────────┐
                  ▼                       ▼
            Angular Frontend       Python ML Service
@@ -86,11 +86,11 @@ frontend/missionwatch-web/
 
 ## Backend (`backend/missionwatch-api`)
 
-Java 25, Spring Boot 4.1, PostgreSQL 18, Flyway, Caffeine, springdoc-openapi. Run and configuration instructions are in the [module README](../backend/missionwatch-api/README.md).
+Java 25, Spring Boot 4.1, MySQL 9.7 (LTS), Flyway, Caffeine, springdoc-openapi. Run and configuration instructions are in the [module README](../backend/missionwatch-api/README.md).
 
 ```text
-Launch Library 2 ──► Ll2Client (rate budget) ──► Ll2Mapper ──► LaunchStore ──► PostgreSQL
-     ▲ every 15 min (upcoming) / 1 h (previous)        │            ├─ launch (+ document jsonb, source_payload jsonb)
+Launch Library 2 ──► Ll2Client (rate budget) ──► Ll2Mapper ──► LaunchStore ──► MySQL
+     ▲ every 15 min (upcoming) / 1 h (previous)        │            ├─ launch (+ document json, source_payload json)
      └── Ll2RefreshJob                                 │            ├─ provider, rocket, launch_site
                                                        │            ├─ launch_snapshot   (FR-07)
                                                        └─ invalid → skipped, counted     └─ data_refresh      (freshness)
@@ -117,12 +117,13 @@ com.jaghan.missionwatch
 |---|---|
 | Package by feature, with rules enforced by ArchUnit (`ArchitectureTest`) | No cycles between features, controllers never touch repositories, and LL2 types never leave `ingest.ll2`. A future source (NASA, news) is a sibling adapter. |
 | The API serves the frontend's `Launch` shape as-is | The Angular backend adapter is a thin HTTP wrapper. The Java mapper is a port of `ll2-mapper.ts`, with the same test cases. |
-| `launch.document` (jsonb) holds the normalised view; relational columns hold what is filtered, sorted or joined | Rich, mostly-optional mission data without dozens of tables, while search stays in SQL. `source_payload` keeps the raw record for traceability and re-mapping. |
+| `launch.document` (JSON column) holds the normalised view; relational columns hold what is filtered, sorted or joined | Rich, mostly-optional mission data without dozens of tables, while search stays in SQL. `source_payload` keeps the raw record for traceability and re-mapping. |
 | Snapshots are written only when time or status changes | Repeated refreshes are idempotent (NFR-02), and the table becomes the FR-07 dataset for Phases 5–7. |
 | One shared, sliding hourly budget for every LL2 call | The scheduled jobs use about 5 of LL2's ~15 anonymous requests per hour. On-demand lookups cannot exhaust the rest. |
 | A failed refresh keeps stored data, records the failure and marks responses `stale` | The site keeps working when LL2 is down, and says so (NFR-02). |
 | Flyway owns the schema; Hibernate only validates it | Migrations are versioned and repeatable. A mismatch fails at start-up, not in production queries. |
-| Testcontainers PostgreSQL in tests, not H2 | JSONB and timestamp behaviour are tested on the real database. |
+| MySQL 9.7 LTS, times as `DATETIME(6)` in UTC (`connectionTimeZone=UTC`, `hibernate.jdbc.time_zone=UTC`) | MySQL has no time-zone-aware timestamp type, so UTC is pinned at the connection and in Hibernate rather than left to server settings. |
+| Testcontainers MySQL in tests, not H2 | JSON-column and UTC timestamp behaviour are tested on the real database. |
 
 ## Roadmap
 
@@ -131,7 +132,7 @@ com.jaghan.missionwatch
 | 1 | Frontend foundation | Done |
 | 2 | Real data integration (Launch Library 2, NASA media, GCAT history) | Done |
 | 3 | Interactive globe (CesiumJS), Mission Story Mode | Planned |
-| 4 | Spring Boot backend, PostgreSQL, Flyway | Done (hosting in Phase 8) |
+| 4 | Spring Boot backend, MySQL, Flyway | Done (hosting in Phase 8) |
 | 5 | Historical data pipeline, schedule snapshots | Planned |
 | 6 | Data science and ML (gated on data sufficiency) | Planned |
 | 7 | Launch Intelligence, watchlists, notifications | Planned |
@@ -140,4 +141,4 @@ com.jaghan.missionwatch
 ## Deployment
 
 - **Frontend:** GitHub Pages, built by `.github/workflows/deploy-pages.yml`, which first runs `npm run data:history` and then builds with `--base-href /`, since the site is served from the root of `missionwatch.jaghan.com`. It runs on every push to `main` and weekly, so the GCAT snapshot stays current. `index.html` is copied to `404.html` so nested routes still resolve on a full page load.
-- **Backend and database:** built and tested by `.github/workflows/backend-ci.yml` (including the container image), but not hosted yet. A Java-capable host and managed PostgreSQL are chosen in Phase 8; the `Dockerfile` and `deployment/docker/compose.yaml` are the starting point. GitHub Pages can only serve static files.
+- **Backend and database:** built and tested by `.github/workflows/backend-ci.yml` (including the container image), but not hosted yet. A Java-capable host and managed MySQL are chosen in Phase 8; the `Dockerfile` and `deployment/docker/compose.yaml` are the starting point. GitHub Pages can only serve static files.

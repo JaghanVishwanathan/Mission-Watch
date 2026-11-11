@@ -24,12 +24,12 @@ public final class LaunchSpecifications {
             var provider = root.join("provider");
             var rocket = root.join("rocket");
             return cb.or(
-                    cb.like(cb.lower(root.get("name")), pattern, '\\'),
-                    cb.like(cb.lower(root.get("missionName")), pattern, '\\'),
-                    cb.like(cb.lower(provider.get("name")), pattern, '\\'),
-                    cb.like(cb.lower(provider.get("abbrev")), pattern, '\\'),
-                    cb.like(cb.lower(rocket.get("name")), pattern, '\\'),
-                    cb.like(cb.lower(rocket.get("family")), pattern, '\\'));
+                    cb.like(cb.lower(root.get("name")), pattern, ESCAPE),
+                    cb.like(cb.lower(root.get("missionName")), pattern, ESCAPE),
+                    cb.like(cb.lower(provider.get("name")), pattern, ESCAPE),
+                    cb.like(cb.lower(provider.get("abbrev")), pattern, ESCAPE),
+                    cb.like(cb.lower(rocket.get("name")), pattern, ESCAPE),
+                    cb.like(cb.lower(rocket.get("family")), pattern, ESCAPE));
         };
     }
 
@@ -56,7 +56,13 @@ public final class LaunchSpecifications {
         };
     }
 
+    /**
+     * LIKE escape character. Not a backslash: MySQL also treats backslashes as escapes inside
+     * string literals, which makes them unreliable here.
+     */
+    private static final char ESCAPE = '!';
+
     private static String escapeLike(String value) {
-        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        return value.replace("!", "!!").replace("%", "!%").replace("_", "!_");
     }
 }

@@ -1,41 +1,43 @@
 # Local development stack.
 #
-#   docker compose -f deployment/docker/compose.yaml up -d postgres        # database only (run the API from your IDE or mvnw)
+#   docker compose -f deployment/docker/compose.yaml up -d mysql           # database only (run the API from your IDE or mvnw)
 #   docker compose -f deployment/docker/compose.yaml --profile api up -d   # database + API container
 #
 # Credentials come from deployment/docker/.env (copy .env.example); the defaults are for local use only.
 name: missionwatch
 
 services:
-  postgres:
-    image: postgres:18-alpine
+  mysql:
+    image: mysql:9.7
     environment:
-      POSTGRES_DB: missionwatch
-      POSTGRES_USER: ${DB_USER:-missionwatch}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-missionwatch}
+      MYSQL_DATABASE: missionwatch
+      MYSQL_USER: ${DB_USER:-missionwatch}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-missionwatch}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-missionwatch-root}
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres-data:/var/lib/postgresql
+      - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 20
+      start_period: 20s
 
   api:
     profiles: [api]
     build:
       context: ../../backend/missionwatch-api
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/missionwatch
+      DB_URL: jdbc:mysql://mysql:3306/missionwatch?connectionTimeZone=UTC
       DB_USER: ${DB_USER:-missionwatch}
       DB_PASSWORD: ${DB_PASSWORD:-missionwatch}
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
 
 volumes:
-  postgres-data:
+  mysql-data:

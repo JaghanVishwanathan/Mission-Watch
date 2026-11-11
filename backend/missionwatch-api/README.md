@@ -1,8 +1,8 @@
 # missionwatch-api
 
-The MissionWatch REST API (Phase 4, [SRS §4.2, §8, §9](../../docs/SRS.md)). It refreshes launches from Launch Library 2 on a schedule, stores them in PostgreSQL with their schedule history, and serves them in the shape the Angular app uses. The design is in [docs/architecture.md](../../docs/architecture.md#backend-backendmissionwatch-api).
+The MissionWatch REST API (Phase 4, [SRS §4.2, §8, §9](../../docs/SRS.md)). It refreshes launches from Launch Library 2 on a schedule, stores them in MySQL with their schedule history, and serves them in the shape the Angular app uses. The design is in [docs/architecture.md](../../docs/architecture.md#backend-backendmissionwatch-api).
 
-**Stack:** Java 25, Spring Boot 4.1 (Web MVC, Data JPA, Validation, Security, Actuator), Flyway, PostgreSQL 18, Caffeine, springdoc-openapi. Tests: JUnit 6, Testcontainers, ArchUnit. Formatting: Spotless (palantir-java-format).
+**Stack:** Java 25, Spring Boot 4.1 (Web MVC, Data JPA, Validation, Security, Actuator), Flyway, MySQL 9.7 (LTS), Caffeine, springdoc-openapi. Tests: JUnit 6, Testcontainers, ArchUnit. Formatting: Spotless (palantir-java-format).
 
 ## Prerequisites
 
@@ -12,8 +12,8 @@ The MissionWatch REST API (Phase 4, [SRS §4.2, §8, §9](../../docs/SRS.md)). I
 ## Run locally
 
 ```bash
-# from the repository root: start PostgreSQL
-docker compose -f deployment/docker/compose.yaml up -d postgres
+# from the repository root: start MySQL
+docker compose -f deployment/docker/compose.yaml up -d mysql
 
 # from this folder: start the API on http://localhost:8080
 ./mvnw spring-boot:run
@@ -32,11 +32,11 @@ To run the database and the API together in containers: `docker compose -f deplo
 ## Test
 
 ```bash
-./mvnw verify            # formatting check, unit tests, PostgreSQL integration tests, architecture rules
+./mvnw verify            # formatting check, unit tests, MySQL integration tests, architecture rules
 ./mvnw spotless:apply    # fix formatting
 ```
 
-The integration tests (`*IntegrationTest`) start PostgreSQL in Docker through Testcontainers. Without Docker they are skipped locally; CI always runs them.
+The integration tests (`*IntegrationTest`) start MySQL in Docker through Testcontainers. Without Docker they are skipped locally; CI always runs them.
 
 ## Configuration
 
@@ -44,7 +44,7 @@ All settings are in [`application.yml`](src/main/resources/application.yml) and 
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/missionwatch` | JDBC URL |
+| `DB_URL` | `jdbc:mysql://localhost:3306/missionwatch?connectionTimeZone=UTC` | JDBC URL |
 | `DB_USER` / `DB_PASSWORD` | `missionwatch` / `missionwatch` | Database credentials (local defaults only) |
 | `MISSIONWATCH_LL2_REFRESH_ENABLED` | `true` | Turn the scheduled LL2 refreshes off |
 | `MISSIONWATCH_LL2_UPCOMING_REFRESH` | `PT15M` | Delay between upcoming-launch refreshes |

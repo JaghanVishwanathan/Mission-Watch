@@ -4,13 +4,16 @@ spring:
   application:
     name: missionwatch-api
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/missionwatch}
+    # connectionTimeZone=UTC: times are stored and read as UTC regardless of server settings.
+    url: ${DB_URL:jdbc:mysql://localhost:3306/missionwatch?connectionTimeZone=UTC}
     username: ${DB_USER:missionwatch}
     password: ${DB_PASSWORD:missionwatch}
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate # Flyway owns the schema (src/main/resources/db/migration)
+    properties:
+      hibernate.jdbc.time_zone: UTC
   flyway:
     locations: classpath:db/migration
   cache:
@@ -20,10 +23,6 @@ spring:
   threads:
     virtual:
       enabled: true
-
-server:
-  error:
-    include-message: never
 
 management:
   endpoints:

@@ -118,7 +118,7 @@ MissionWatch shall use a modular architecture consisting of a web frontend, a Ja
                 │            │             │
                 └────────────┼─────────────┘
                              ▼
-                       PostgreSQL
+                       MySQL
                              │
                  ┌───────────┴───────────┐
                  ▼                       ▼
@@ -164,7 +164,7 @@ The frontend shall be the primary product experience. It must prioritize visual 
 
 ### 4.2 Backend
 
-> **Implementation note (Phase 4):** built with Java 25 (LTS) and Spring Boot 4.1, the current releases at the time, rather than older versions. See [architecture.md](architecture.md#backend-backendmissionwatch-api).
+> **Implementation note (Phase 4):** built with Java 25 (LTS) and Spring Boot 4.1, the current releases at the time, rather than older versions. The database is MySQL 9.7 (LTS), chosen in place of the originally specified PostgreSQL. See [architecture.md](architecture.md#backend-backendmissionwatch-api).
 
 | Technology | Purpose |
 |---|---|
@@ -175,7 +175,7 @@ The frontend shall be the primary product experience. It must prioritize visual 
 | Spring Security | Authentication and authorization |
 | Bean Validation | Request validation |
 | Flyway | Database schema migrations |
-| PostgreSQL | Persistent application data |
+| MySQL | Persistent application data |
 | Spring scheduling | Periodic data collection and processing |
 | Caffeine or another suitable cache | Application-level caching |
 
@@ -202,7 +202,7 @@ The frontend shall be the primary product experience. It must prioritize visual 
 - Environment variables for deployment configuration.
 - GitHub Pages for the Angular frontend.
 - A Java-capable hosting service for Spring Boot.
-- Managed PostgreSQL hosting.
+- Managed MySQL hosting.
 - Optional Python-capable hosting for the ML service.
 
 Hosting providers must support the required runtime, network access, storage and background processing. GitHub Pages cannot execute Spring Boot or Python services.
@@ -910,7 +910,7 @@ Deliverables:
 Deliverables:
 
 - Spring Boot REST API.
-- PostgreSQL schema.
+- MySQL schema.
 - Flyway migrations.
 - External API adapters.
 - Caching.
@@ -1084,7 +1084,7 @@ Deployment workflows shall use protected secrets and environment-specific config
 
 - Frontend: GitHub Pages or another static hosting provider.
 - Backend: Java-compatible hosting.
-- Database: managed PostgreSQL.
+- Database: managed MySQL.
 - ML service: optional Python-compatible hosting.
 
 If the ML service is unavailable, the core mission exploration and analytics features shall continue to work.

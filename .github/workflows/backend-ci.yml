@@ -26,7 +26,7 @@ jobs:
           java-version: 25
           cache: maven
 
-      # Formatting (Spotless), unit tests, PostgreSQL integration tests (Testcontainers; the
+      # Formatting (Spotless), unit tests, MySQL integration tests (Testcontainers; the
       # runner has Docker) and architecture rules (ArchUnit).
       - name: Verify
         run: ./mvnw -B verify
